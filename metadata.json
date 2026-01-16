@@ -1,0 +1,5 @@
+{
+  "name": "Taiwan Bank High Interest Rate Comparison",
+  "description": "An interactive tool to compare high-yield savings account rates from various Taiwanese banks, allowing users to toggle between new and existing customer statuses for personalized results.",
+  "requestFramePermissions": []
+}
