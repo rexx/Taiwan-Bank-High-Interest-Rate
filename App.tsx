@@ -2,7 +2,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { BANKS } from './data/banks';
 import { BankData, BankRateInfo } from './types';
-import { Check, Info, Wallet, UserCheck, CreditCard, ExternalLink, Settings2, X, Banknote, Calculator, TrendingUp, Moon, Sun, UserPlus, ShieldCheck, Ban, LayoutGrid, List, ChevronDown, ChevronUp } from 'lucide-react';
+import { Check, Info, Wallet, UserCheck, CreditCard, ExternalLink, Settings2, X, Banknote, Calculator, TrendingUp, Moon, Sun, UserPlus, ShieldCheck, Ban, LayoutGrid, List, ChevronDown, ChevronUp, CheckCircle2, AlertCircle, Clock } from 'lucide-react';
 
 const LOCAL_STORAGE_KEY = 'taiwan-bank-owned-ids';
 const SETUP_COMPLETED_KEY = 'taiwan-bank-setup-completed';
@@ -34,7 +34,7 @@ const App: React.FC = () => {
 
   const [includeNewAccounts, setIncludeNewAccounts] = useState<boolean>(() => {
     const saved = localStorage.getItem(INCLUDE_NEW_KEY);
-    return saved !== 'false';
+    return saved === 'true'; 
   });
 
   const [viewMode, setViewMode] = useState<'card' | 'compact'>(() => {
@@ -103,16 +103,13 @@ const App: React.FC = () => {
       .sort((a, b) => {
         const aIsOwned = ownedBankCodes.has(a.code);
         const bIsOwned = ownedBankCodes.has(b.code);
-        
-        if (!includeNewAccounts) {
-          if (aIsOwned && !bIsOwned) return -1;
-          if (!aIsOwned && bIsOwned) return 1;
-        }
-
         const aRate = aIsOwned ? a.oldCustomer.rate : a.newCustomer.rate;
         const bRate = bIsOwned ? b.oldCustomer.rate : b.newCustomer.rate;
-        
         return bRate - aRate;
+      })
+      .filter(bank => {
+        if (includeNewAccounts) return true;
+        return ownedBankCodes.has(bank.code);
       });
   }, [ownedBankCodes, includeNewAccounts]);
 
@@ -121,11 +118,7 @@ const App: React.FC = () => {
     const result: Record<string, number> = {};
     let totalInterest = 0;
 
-    const eligibleBanks = includeNewAccounts 
-      ? sortedBanks 
-      : sortedBanks.filter(bank => ownedBankCodes.has(bank.code));
-
-    for (const bank of eligibleBanks) {
+    for (const bank of sortedBanks) {
       const isOwned = ownedBankCodes.has(bank.code);
       const data = isOwned ? bank.oldCustomer : bank.newCustomer;
       
@@ -141,7 +134,7 @@ const App: React.FC = () => {
     }
 
     return { result, totalInterest, remaining };
-  }, [totalCash, sortedBanks, ownedBankCodes, includeNewAccounts]);
+  }, [totalCash, sortedBanks, ownedBankCodes]);
 
   const uniqueBanksForSettings = useMemo(() => {
     const seen = new Set();
@@ -157,179 +150,194 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-300 pb-20">
-      <header className="bg-gradient-to-r from-blue-600 to-indigo-700 dark:from-indigo-900 dark:to-slate-900 text-white py-6 px-4 sticky top-0 z-40 shadow-lg">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-300 pb-20 font-sans">
+      <header className="bg-gradient-to-r from-indigo-600 to-violet-700 dark:from-slate-900 dark:to-indigo-950 text-white py-4 px-4 sticky top-0 z-40 shadow-lg backdrop-blur-md bg-opacity-95">
         <div className="max-w-4xl mx-auto flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="bg-white/20 p-2 rounded-xl backdrop-blur-sm">
-              <CreditCard className="w-6 h-6 md:w-8 md:h-8" />
+            <div className="bg-white/10 p-2 rounded-xl border border-white/20 backdrop-blur-md">
+              <TrendingUp className="w-5 h-5 md:w-6 md:h-6 text-indigo-100" />
             </div>
             <div>
-              <h1 className="text-lg md:text-2xl font-bold leading-tight">台灣高利活存 (2026)</h1>
-              <p className="text-[10px] md:text-sm text-blue-100 opacity-80">極大化您的利息收益</p>
+              <h1 className="text-lg md:text-xl font-black leading-tight tracking-tight">高利活存攻略</h1>
+              <p className="text-[10px] md:text-xs text-indigo-100/70 font-medium">個人化利息極大化助手</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <button onClick={toggleTheme} className="p-2 bg-white/10 hover:bg-white/20 rounded-full transition-all text-white flex items-center justify-center">
-              {isDarkMode ? <Sun className="w-5 h-5 md:w-6 md:h-6" /> : <Moon className="w-5 h-5 md:w-6 md:h-6" />}
+            <button onClick={toggleTheme} className="p-2 bg-white/10 hover:bg-white/20 rounded-full transition-all text-white border border-white/10">
+              {isDarkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
             </button>
-            <button onClick={() => setIsSettingsOpen(true)} className="flex items-center gap-2 px-4 py-2 bg-white text-indigo-700 dark:bg-indigo-600 dark:text-white rounded-full font-bold text-sm hover:bg-indigo-50 dark:hover:bg-indigo-700 transition-all shadow-sm active:scale-95">
-              <Settings2 className="w-4 h-4" />
-              <span className="hidden sm:inline">帳戶設定</span>
+            <button 
+              onClick={() => setIsSettingsOpen(true)} 
+              className="flex items-center gap-2 px-3 py-2 bg-white text-indigo-700 dark:bg-indigo-500 dark:text-white rounded-full font-bold text-xs md:text-sm hover:scale-105 active:scale-95 transition-all shadow-xl shadow-indigo-500/20"
+            >
+              <UserCheck className="w-4 h-4" />
+              <span>帳戶勾選</span>
             </button>
           </div>
         </div>
       </header>
 
-      <main className="max-w-4xl mx-auto px-4 py-8">
-        <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 shadow-sm border border-slate-100 dark:border-slate-800 mb-8 space-y-6 transition-colors">
-          <div className="flex flex-col md:flex-row items-center gap-6">
-            <div className="flex-1 w-full">
-              <label className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2 block flex items-center gap-1.5">
-                <Banknote className="w-3.5 h-3.5" />
-                輸入存款現金 (萬元)
+      <main className="max-w-4xl mx-auto px-4 py-6">
+        {/* Statistics Dashboard */}
+        <div className="bg-white dark:bg-slate-900 rounded-[2rem] p-6 shadow-xl shadow-slate-200/50 dark:shadow-none border border-slate-100 dark:border-slate-800 mb-6 space-y-6 transition-all">
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
+            <div className="md:col-span-7">
+              <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] mb-2 block flex items-center gap-2">
+                <Wallet className="w-3.5 h-3.5 text-indigo-500" />
+                我的總流動資產
               </label>
-              <div className="relative">
-                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 font-bold">$</span>
+              <div className="relative group">
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 text-xl font-black transition-colors group-focus-within:text-indigo-500">$</span>
                 <input 
                   type="number"
-                  placeholder="例如: 100"
-                  className="w-full pl-8 pr-16 py-4 bg-slate-50 dark:bg-slate-800 border-none rounded-2xl text-xl font-bold focus:ring-2 focus:ring-indigo-500 text-slate-900 dark:text-white transition-all"
+                  placeholder="輸入金額"
+                  className="w-full pl-10 pr-16 py-3 bg-slate-50 dark:bg-slate-800/50 border-2 border-transparent focus:border-indigo-500 focus:bg-white dark:focus:bg-slate-800 rounded-2xl text-2xl font-black focus:ring-0 text-slate-900 dark:text-white transition-all outline-none"
                   value={totalCash / 10000 || ''}
                   onChange={(e) => setTotalCash(Number(e.target.value) * 10000)}
                 />
-                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 font-bold">萬元</span>
+                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 font-black text-sm">萬元</span>
               </div>
             </div>
-            <div className="w-full md:w-auto grid grid-cols-2 md:flex gap-4">
-              <div className="bg-emerald-50 dark:bg-emerald-950/30 p-4 rounded-2xl flex-1 md:min-w-[160px] border border-emerald-100 dark:border-emerald-900/50">
-                <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold uppercase block mb-1">預估年利息</span>
-                <span className="text-lg font-black text-emerald-700 dark:text-emerald-300">{formatCurrency(allocation.totalInterest)}</span>
+            
+            <div className="md:col-span-5 grid grid-cols-2 gap-3">
+              <div className="bg-emerald-50 dark:bg-emerald-950/20 p-4 rounded-2xl border border-emerald-100 dark:border-emerald-900/30 flex flex-col justify-between">
+                <span className="text-[9px] text-emerald-600 dark:text-emerald-400 font-black uppercase tracking-wider mb-1">預估年利息</span>
+                <span className="text-lg font-black text-emerald-700 dark:text-emerald-300 truncate">{formatCurrency(allocation.totalInterest)}</span>
               </div>
-              <div className="bg-blue-50 dark:bg-blue-950/30 p-4 rounded-2xl flex-1 md:min-w-[160px] border border-blue-100 dark:border-blue-900/50">
-                <span className="text-[10px] text-blue-600 dark:text-blue-400 font-bold uppercase block mb-1">平均年利率</span>
-                <span className="text-lg font-black text-blue-700 dark:text-blue-300">
+              <div className="bg-indigo-50 dark:bg-indigo-950/20 p-4 rounded-2xl border border-indigo-100 dark:border-indigo-900/30 flex flex-col justify-between">
+                <span className="text-[9px] text-indigo-600 dark:text-indigo-400 font-black uppercase tracking-wider mb-1">平均利率</span>
+                <span className="text-lg font-black text-indigo-700 dark:text-indigo-300">
                   {totalCash > 0 ? ((allocation.totalInterest / totalCash) * 100).toFixed(3) : '0.000'}%
                 </span>
               </div>
             </div>
           </div>
 
-          <div className="pt-4 border-t border-slate-50 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="pt-4 border-t border-slate-50 dark:border-slate-800/50 flex flex-col sm:flex-row items-center justify-between gap-4">
              <div className="flex items-center gap-3">
-                <div className={`p-2 rounded-lg ${includeNewAccounts ? 'bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600' : 'bg-slate-100 dark:bg-slate-800 text-slate-500'}`}>
+                <div className={`p-2 rounded-xl transition-all shadow-sm ${includeNewAccounts ? 'bg-amber-100 dark:bg-amber-900/40 text-amber-600' : 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600'}`}>
                    {includeNewAccounts ? <UserPlus className="w-5 h-5" /> : <ShieldCheck className="w-5 h-5" />}
                 </div>
                 <div>
-                   <p className="text-sm font-bold text-slate-700 dark:text-slate-200">
-                      {includeNewAccounts ? '積極配置：包含新開戶建議' : '穩健配置：僅限現有帳戶'}
+                   <p className="text-sm font-black text-slate-800 dark:text-slate-100">
+                      {includeNewAccounts ? '包含新開戶建議 (更積極)' : '僅顯示現有帳戶 (更穩健)'}
                    </p>
-                   <p className="text-xs text-slate-400 dark:text-slate-500">
-                      {includeNewAccounts ? '優先配置於市場最高利率' : '僅計算您勾選擁有的帳戶'}
+                   <p className="text-[10px] text-slate-400 dark:text-slate-500 font-medium">
+                      {includeNewAccounts ? '自動比對我沒勾選的銀行，顯示其新戶利率' : '只計算我勾選已擁有的帳戶及其舊戶利率'}
                    </p>
                 </div>
              </div>
              <button 
                 onClick={() => setIncludeNewAccounts(!includeNewAccounts)}
-                className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors focus:outline-none ring-2 ring-offset-2 dark:ring-offset-slate-900 ring-transparent ${includeNewAccounts ? 'bg-indigo-600' : 'bg-slate-300 dark:bg-slate-700'}`}
+                className={`relative inline-flex h-8 w-16 items-center rounded-full transition-all ring-2 ring-offset-2 dark:ring-offset-slate-900 ring-transparent shadow-lg ${includeNewAccounts ? 'bg-amber-500' : 'bg-emerald-500'}`}
              >
-                <span className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${includeNewAccounts ? 'translate-x-6' : 'translate-x-1'}`} />
+                <span className={`inline-block h-6 w-6 transform rounded-full bg-white shadow-md transition-transform duration-300 ease-in-out ${includeNewAccounts ? 'translate-x-9' : 'translate-x-1'}`} />
              </button>
           </div>
         </div>
 
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-bold text-slate-700 dark:text-slate-300 flex items-center gap-2">
-            <TrendingUp className="w-5 h-5 text-indigo-500 dark:text-indigo-400" />
-            最佳存放配置
+        <div className="flex items-center justify-between mb-4 px-2">
+          <h2 className="text-lg font-black text-slate-800 dark:text-slate-200 flex items-center gap-2">
+            <CheckCircle2 className="w-5 h-5 text-indigo-500" />
+            建議存放配置
           </h2>
-          <div className="flex bg-slate-200/50 dark:bg-slate-800 p-1 rounded-xl">
+          <div className="flex bg-slate-200/50 dark:bg-slate-800/50 p-1 rounded-xl border border-slate-200/50 dark:border-slate-800">
             <button 
               onClick={() => setViewMode('card')}
-              className={`p-2 rounded-lg transition-all ${viewMode === 'card' ? 'bg-white dark:bg-slate-700 shadow-sm text-indigo-600 dark:text-indigo-400' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'}`}
+              className={`p-1.5 rounded-lg transition-all ${viewMode === 'card' ? 'bg-white dark:bg-slate-700 shadow-md text-indigo-600 dark:text-indigo-400' : 'text-slate-400 hover:text-slate-600'}`}
               title="卡片模式"
             >
               <LayoutGrid className="w-4 h-4" />
             </button>
             <button 
               onClick={() => setViewMode('compact')}
-              className={`p-2 rounded-lg transition-all ${viewMode === 'compact' ? 'bg-white dark:bg-slate-700 shadow-sm text-indigo-600 dark:text-indigo-400' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'}`}
-              title="精簡模式"
+              className={`p-1.5 rounded-lg transition-all ${viewMode === 'compact' ? 'bg-white dark:bg-slate-700 shadow-md text-indigo-600 dark:text-indigo-400' : 'text-slate-400 hover:text-slate-600'}`}
+              title="列表模式"
             >
               <List className="w-4 h-4" />
             </button>
           </div>
         </div>
 
-        {viewMode === 'card' ? (
-          <div className="space-y-3">
+        {sortedBanks.length === 0 ? (
+          <div className="py-20 text-center bg-white dark:bg-slate-900 rounded-[2rem] border-2 border-dashed border-slate-200 dark:border-slate-800">
+            <div className="bg-slate-100 dark:bg-slate-800 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Ban className="w-8 h-8 text-slate-400" />
+            </div>
+            <h3 className="text-lg font-bold text-slate-800 dark:text-slate-200">目前沒有顯示任何帳戶</h3>
+            <p className="text-slate-500 mt-2 max-w-xs mx-auto text-sm">請點擊右上角「帳戶勾選」或開啟「包含新開戶建議」。</p>
+          </div>
+        ) : viewMode === 'card' ? (
+          <div className="space-y-4">
             {sortedBanks.map((bank) => {
               const isOwned = ownedBankCodes.has(bank.code);
               const data: BankRateInfo = isOwned ? bank.oldCustomer : bank.newCustomer;
               const depositAmount = allocation.result[bank.id] || 0;
               const isSelectedForDeposit = depositAmount > 0;
-              const isExcludedByStrategy = !includeNewAccounts && !isOwned;
 
               return (
                 <div 
                   key={bank.id}
-                  className={`group relative overflow-hidden bg-white dark:bg-slate-900 rounded-2xl p-4 md:p-5 shadow-sm border-l-4 transition-all duration-300 ${
-                    isExcludedByStrategy 
-                      ? 'border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/40 border-dashed' :
+                  className={`group relative overflow-hidden bg-white dark:bg-slate-900 rounded-3xl p-5 shadow-sm border-l-8 transition-all duration-500 hover:shadow-xl hover:-translate-y-0.5 ${
                     !isSelectedForDeposit 
-                      ? 'border-slate-200 dark:border-slate-800 border-dotted' :
-                    isOwned ? 'border-emerald-500 dark:border-emerald-600 shadow-indigo-100/50' : 'border-blue-500 dark:border-blue-600 shadow-indigo-100/50'
+                      ? 'border-slate-300 dark:border-slate-700' :
+                    isOwned ? 'border-emerald-500 shadow-lg shadow-emerald-500/10' : 'border-amber-500 shadow-lg shadow-amber-500/10'
                   }`}
                 >
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-tight ${
-                          isOwned ? 'bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-400' : 'bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-400'
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className={`text-[9px] px-2 py-0.5 rounded-full font-black uppercase tracking-[0.1em] shadow-sm ${
+                          isOwned ? 'bg-emerald-500 text-white' : 'bg-amber-500 text-white'
                         }`}>
-                          {isOwned ? '舊戶專屬' : '新戶推薦'}
+                          {isOwned ? '我有帳戶' : '推薦新開'}
                         </span>
-                        <span className="text-slate-400 dark:text-slate-500 text-xs font-mono">#{bank.code}</span>
-                        {isSelectedForDeposit && (
-                          <span className="bg-indigo-600 dark:bg-indigo-500 text-white text-[10px] px-2 py-0.5 rounded-full font-bold animate-pulse">推薦存放</span>
+                        {!isSelectedForDeposit && (
+                          <span className="text-[9px] px-2 py-0.5 rounded-full font-black uppercase tracking-[0.1em] bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700 flex items-center gap-1">
+                            <Clock className="w-2.5 h-2.5" /> 待命
+                          </span>
                         )}
+                        <span className="text-slate-400 dark:text-slate-500 text-[10px] font-mono font-bold">#{bank.code}</span>
                       </div>
-                      <h3 className={`text-base md:text-lg font-bold transition-colors ${isExcludedByStrategy ? 'text-slate-400 dark:text-slate-600' : 'text-slate-800 dark:text-slate-100'}`}>{bank.name}</h3>
-                      <div className="mt-2 flex flex-wrap gap-y-2 gap-x-5">
+                      <h3 className="text-lg font-black text-slate-800 dark:text-slate-100 mb-3">{bank.name}</h3>
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                         <div className="flex flex-col">
-                          <span className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-tighter">單筆上限</span>
-                          <span className={`text-xs md:text-sm font-semibold ${isExcludedByStrategy ? 'text-slate-400 dark:text-slate-600' : 'text-slate-700 dark:text-slate-300'}`}>{data.quota}</span>
+                          <span className="text-[9px] text-slate-400 font-black uppercase tracking-widest mb-0.5">單筆上限</span>
+                          <span className="text-xs font-bold text-slate-700 dark:text-slate-300">{data.quota}</span>
                         </div>
-                        {isSelectedForDeposit && (
-                          <div className="flex flex-col">
-                            <span className="text-[10px] text-indigo-500 dark:text-indigo-400 font-bold uppercase tracking-tighter">建議存入</span>
-                            <span className="text-xs md:text-sm font-black text-indigo-700 dark:text-indigo-300">{formatCurrency(depositAmount)}</span>
-                          </div>
-                        )}
                         <div className="flex flex-col">
-                          <span className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-tighter">跨轉/跨提</span>
-                          <span className={`text-xs md:text-sm font-semibold ${isExcludedByStrategy ? 'text-slate-400 dark:text-slate-600' : 'text-slate-700 dark:text-slate-300'}`}>{data.transfers}</span>
+                          <span className="text-[9px] text-slate-400 font-black uppercase tracking-widest mb-0.5">跨轉/提</span>
+                          <span className="text-xs font-bold text-slate-700 dark:text-slate-300">{data.transfers}</span>
+                        </div>
+                        <div className="flex flex-col col-span-2 sm:col-span-1">
+                          <span className="text-[9px] text-indigo-500 dark:text-indigo-400 font-black uppercase tracking-widest mb-0.5">建議存入</span>
+                          <span className={`text-base font-black ${isSelectedForDeposit ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-400 dark:text-slate-500'}`}>
+                            {isSelectedForDeposit ? formatCurrency(depositAmount) : '$0'}
+                          </span>
                         </div>
                       </div>
                     </div>
-                    <div className="flex flex-col items-start sm:items-end justify-center min-w-[120px]">
+                    <div className={`flex flex-col items-start sm:items-end justify-center min-w-[120px] p-3 rounded-2xl border transition-colors ${
+                      isSelectedForDeposit 
+                      ? 'bg-slate-50 dark:bg-slate-800/50 border-slate-100 dark:border-slate-800' 
+                      : 'bg-slate-100/50 dark:bg-slate-900/50 border-transparent border-dashed'
+                    }`}>
                       <span className={`text-2xl md:text-3xl font-black tracking-tighter transition-colors ${
-                        isExcludedByStrategy ? 'text-slate-300 dark:text-slate-800' :
-                        !isSelectedForDeposit ? 'text-slate-400 dark:text-slate-600' :
-                        isOwned ? 'text-emerald-600 dark:text-emerald-400' : 'text-blue-600 dark:text-blue-400'
+                        !isSelectedForDeposit ? 'text-slate-600 dark:text-slate-400' :
+                        isOwned ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600 dark:text-amber-400'
                       }`}>{data.display}</span>
-                      <span className="text-[10px] text-slate-400 dark:text-slate-500 font-medium">預期年利率</span>
+                      <span className="text-[9px] text-slate-400 dark:text-slate-500 font-black uppercase mt-0.5">專案年利率</span>
                     </div>
                   </div>
-                  {data.notes && !isExcludedByStrategy && (
-                    <div className="mt-3 pt-3 border-t border-slate-50 dark:border-slate-800 text-xs text-slate-500 dark:text-slate-400 flex gap-1.5 items-start">
+                  {data.notes && (
+                    <div className="mt-4 pt-3 border-t border-slate-50 dark:border-slate-800/50 text-[11px] text-slate-500 dark:text-slate-400 flex gap-2 items-start bg-slate-50/50 dark:bg-slate-950/20 -mx-5 px-5 py-3">
                       <Info className="w-3.5 h-3.5 mt-0.5 flex-shrink-0 text-slate-300 dark:text-slate-600" />
-                      <span className="leading-relaxed">{data.notes}</span>
+                      <span className="leading-relaxed font-medium">{data.notes}</span>
                     </div>
                   )}
                   {isSelectedForDeposit && data.numericQuota !== Infinity && (
-                    <div className="mt-4 w-full h-1 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
-                      <div className={`h-full transition-all duration-1000 ${isOwned ? 'bg-emerald-500 dark:bg-emerald-600' : 'bg-blue-500 dark:bg-blue-600'}`} style={{ width: `${(depositAmount / data.numericQuota) * 100}%` }}></div>
+                    <div className="absolute bottom-0 left-0 w-full h-1 bg-slate-100 dark:bg-slate-800">
+                      <div className={`h-full transition-all duration-1000 ease-out ${isOwned ? 'bg-emerald-500' : 'bg-amber-500'}`} style={{ width: `${(depositAmount / data.numericQuota) * 100}%` }}></div>
                     </div>
                   )}
                 </div>
@@ -337,16 +345,16 @@ const App: React.FC = () => {
             })}
           </div>
         ) : (
-          <div className="bg-white dark:bg-slate-900 rounded-3xl overflow-hidden shadow-sm border border-slate-100 dark:border-slate-800">
+          <div className="bg-white dark:bg-slate-900 rounded-3xl overflow-hidden shadow-xl shadow-slate-200/50 dark:shadow-none border border-slate-100 dark:border-slate-800">
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
                 <thead>
-                  <tr className="bg-slate-50 dark:bg-slate-800/50 text-slate-400 dark:text-slate-500 text-[10px] font-bold uppercase tracking-wider">
-                    <th className="px-4 py-3 min-w-[160px]">銀行代碼 & 名稱</th>
-                    <th className="px-4 py-3 text-right">預期利率</th>
-                    <th className="px-4 py-3 text-right">建議存入</th>
-                    <th className="px-4 py-3 text-right">額度上限</th>
-                    <th className="px-2 py-3 w-8"></th>
+                  <tr className="bg-slate-50 dark:bg-slate-800/50 text-slate-400 dark:text-slate-500 text-[9px] font-black uppercase tracking-[0.2em]">
+                    <th className="px-5 py-3 min-w-[160px]">銀行名稱 & 代碼</th>
+                    <th className="px-5 py-3 text-right">預期利率</th>
+                    <th className="px-5 py-3 text-right">建議存入</th>
+                    <th className="px-5 py-3 text-right">額度上限</th>
+                    <th className="px-3 py-3 w-10"></th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-50 dark:divide-slate-800">
@@ -355,77 +363,92 @@ const App: React.FC = () => {
                     const data: BankRateInfo = isOwned ? bank.oldCustomer : bank.newCustomer;
                     const depositAmount = allocation.result[bank.id] || 0;
                     const isSelectedForDeposit = depositAmount > 0;
-                    const isExcludedByStrategy = !includeNewAccounts && !isOwned;
                     const isExpanded = expandedRows.has(bank.id);
-                    const usagePercent = data.numericQuota !== Infinity ? (depositAmount / data.numericQuota) * 100 : 0;
 
                     return (
                       <React.Fragment key={bank.id}>
                         <tr 
                           onClick={() => toggleExpandRow(bank.id)}
-                          className={`group cursor-pointer transition-colors relative hover:bg-slate-50/80 dark:hover:bg-slate-800/30 ${
-                            isExcludedByStrategy ? 'opacity-40 grayscale' : 
+                          className={`group cursor-pointer transition-all relative hover:bg-indigo-50/30 dark:hover:bg-indigo-500/5 ${
                             isSelectedForDeposit ? 'bg-indigo-50/10 dark:bg-indigo-500/5' : ''
                           }`}
                         >
-                          <td className="px-4 py-2.5 relative">
+                          <td className="px-5 py-3">
                             <div className="flex items-center gap-2">
-                              <span className="text-[10px] text-slate-400 dark:text-slate-500 font-mono bg-slate-100 dark:bg-slate-800 px-1 rounded flex-shrink-0">
+                              <span className="text-[9px] text-slate-400 dark:text-slate-500 font-black bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded-md flex-shrink-0">
                                 {bank.code}
                               </span>
-                              <div className="flex items-center gap-1.5 truncate">
-                                <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${isOwned ? 'bg-emerald-500' : 'bg-blue-500'}`}></span>
-                                <span className="text-slate-800 dark:text-slate-100 font-bold text-sm truncate">{bank.name}</span>
+                              <div className="flex items-center gap-2 truncate">
+                                <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${isOwned ? 'bg-emerald-500 shadow-sm shadow-emerald-500/50' : 'bg-amber-500 shadow-sm shadow-amber-500/50'}`}></span>
+                                <span className="text-slate-800 dark:text-slate-100 font-bold text-xs truncate">{bank.name}</span>
                               </div>
                             </div>
-                            {/* Thin Progress Bar for Compact Mode */}
-                            {isSelectedForDeposit && data.numericQuota !== Infinity && (
-                                <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-transparent overflow-hidden">
-                                    <div 
-                                        className={`h-full transition-all duration-1000 ${isOwned ? 'bg-emerald-500/60' : 'bg-blue-500/60'}`}
-                                        style={{ width: `${usagePercent}%` }}
-                                    ></div>
-                                </div>
-                            )}
                           </td>
-                          <td className={`px-4 py-2.5 text-right font-black text-sm whitespace-nowrap ${
-                            isExcludedByStrategy ? 'text-slate-400' :
-                            isOwned ? 'text-emerald-600 dark:text-emerald-400' : 'text-blue-600 dark:text-blue-400'
+                          <td className={`px-5 py-3 text-right font-black text-xs whitespace-nowrap ${
+                            isOwned ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600 dark:text-amber-400'
                           }`}>
                             {data.display}
                           </td>
-                          <td className="px-4 py-2.5 text-right whitespace-nowrap">
-                            {isSelectedForDeposit ? (
-                              <span className="text-indigo-600 dark:text-indigo-400 font-black text-sm">{formatCurrency(depositAmount)}</span>
-                            ) : (
-                              <span className="text-slate-300 dark:text-slate-700 text-xs">-</span>
-                            )}
+                          <td className="px-5 py-3 text-right whitespace-nowrap">
+                            <div className="flex flex-col items-end">
+                              {isSelectedForDeposit ? (
+                                <span className="text-indigo-600 dark:text-indigo-400 font-black text-xs">{formatCurrency(depositAmount)}</span>
+                              ) : (
+                                <span className="text-slate-400 dark:text-slate-500 text-[10px] font-bold">待配置</span>
+                              )}
+                              {isSelectedForDeposit && data.numericQuota !== Infinity && (
+                                <div className="w-16 h-0.5 bg-slate-200 dark:bg-slate-800 mt-1 rounded-full overflow-hidden">
+                                  <div 
+                                    className={`h-full transition-all duration-1000 ${isOwned ? 'bg-emerald-500' : 'bg-amber-500'}`}
+                                    style={{ width: `${(depositAmount / data.numericQuota) * 100}%` }}
+                                  ></div>
+                                </div>
+                              )}
+                            </div>
                           </td>
-                          <td className="px-4 py-2.5 text-right text-[11px] text-slate-500 font-medium whitespace-nowrap">{data.quota}</td>
-                          <td className="px-2 py-2.5">
+                          <td className="px-5 py-3 text-right text-[10px] text-slate-500 dark:text-slate-400 font-black whitespace-nowrap">{data.quota}</td>
+                          <td className="px-3 py-3">
                             {isExpanded ? <ChevronUp className="w-4 h-4 text-slate-300" /> : <ChevronDown className="w-4 h-4 text-slate-300" />}
                           </td>
                         </tr>
                         {isExpanded && (
-                          <tr className="bg-slate-50/30 dark:bg-slate-950/20">
-                            <td colSpan={5} className="px-4 py-3">
-                              <div className="space-y-2">
-                                <div className="flex items-center gap-4 text-xs">
-                                  <div className="flex items-center gap-1 text-slate-400">
-                                    <ShieldCheck className="w-3.5 h-3.5" />
-                                    <span>{isOwned ? '已持有(舊戶)' : '新開戶建議'}</span>
+                          <tr className="bg-slate-50/50 dark:bg-slate-950/40">
+                            <td colSpan={5} className="px-5 py-4">
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                  <div className="flex items-center gap-3 text-[10px] font-black uppercase tracking-wider text-slate-400">
+                                    <div className="flex items-center gap-1">
+                                      <ShieldCheck className="w-3.5 h-3.5" />
+                                      <span>{isOwned ? '已持有' : '新戶'}</span>
+                                    </div>
+                                    <div className="flex items-center gap-1">
+                                      <Calculator className="w-3.5 h-3.5" />
+                                      <span>跨轉/提：{data.transfers}</span>
+                                    </div>
                                   </div>
-                                  <div className="flex items-center gap-1 text-slate-400">
-                                    <Calculator className="w-3.5 h-3.5" />
-                                    <span>跨轉/提：{data.transfers}</span>
-                                  </div>
+                                  {data.notes && (
+                                    <div className="p-3 bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-800 text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed font-medium">
+                                      <Info className="w-3.5 h-3.5 inline-block mr-1.5 text-indigo-300 mb-0.5" />
+                                      {data.notes}
+                                    </div>
+                                  )}
                                 </div>
-                                {data.notes && (
-                                  <div className="p-3 bg-white dark:bg-slate-800/50 rounded-xl border border-slate-100 dark:border-slate-800 text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-                                    <Info className="w-3 h-3 inline mr-1 text-slate-300" />
-                                    {data.notes}
-                                  </div>
-                                )}
+                                <div className="flex items-center justify-end">
+                                  {isSelectedForDeposit && data.numericQuota !== Infinity && (
+                                    <div className="w-full max-w-[160px] space-y-1.5">
+                                      <div className="flex justify-between text-[9px] font-black uppercase text-slate-400 tracking-widest">
+                                        <span>額度使用率</span>
+                                        <span>{Math.round((depositAmount / data.numericQuota) * 100)}%</span>
+                                      </div>
+                                      <div className="h-1 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
+                                        <div 
+                                          className={`h-full transition-all duration-1000 ${isOwned ? 'bg-emerald-500' : 'bg-amber-500'}`}
+                                          style={{ width: `${(depositAmount / data.numericQuota) * 100}%` }}
+                                        ></div>
+                                      </div>
+                                    </div>
+                                  )}
+                                </div>
                               </div>
                             </td>
                           </tr>
@@ -440,79 +463,98 @@ const App: React.FC = () => {
         )}
 
         {allocation.remaining > 0 && (
-          <div className="mt-8 bg-slate-200 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-2xl p-6 text-center transition-colors">
-            <p className="text-slate-600 dark:text-slate-300 font-bold flex items-center justify-center gap-2">
-              <Calculator className="w-5 h-5" />
-              尚有 {formatCurrency(allocation.remaining)} 未能排入高利額度
+          <div className="mt-6 bg-slate-100 dark:bg-slate-900/50 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-3xl p-6 text-center transition-all animate-pulse-slow">
+            <p className="text-slate-600 dark:text-slate-300 font-black flex items-center justify-center gap-2 text-base">
+              <Calculator className="w-5 h-5 text-slate-400" />
+              還有 {formatCurrency(allocation.remaining)} 資金溢出
             </p>
-            <p className="text-xs text-slate-500 dark:text-slate-500 mt-1 italic">
-               {includeNewAccounts ? '建議將剩餘資金放入基本牌告利率較高之帳戶' : '建議勾選更多現有帳戶獲得更高利息'}
+            <p className="text-[11px] text-slate-500 dark:text-slate-500 mt-1.5 font-medium">
+               {includeNewAccounts ? '高利額度已滿，建議存入基本牌告利率最高之帳戶。' : '高利額度已滿，您可以勾選更多現有帳戶或開啟「新戶建議」。'}
             </p>
           </div>
         )}
       </main>
 
       {isSettingsOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
-          <div className="absolute inset-0 bg-slate-900/60 dark:bg-black/70 backdrop-blur-sm" onClick={closeSettings}></div>
-          <div className="relative bg-white dark:bg-slate-900 w-full max-w-lg rounded-3xl shadow-2xl flex flex-col max-h-[90vh] overflow-hidden transition-colors">
-            <div className="flex items-center justify-between p-6 border-b border-slate-100 dark:border-slate-800">
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-4 overflow-hidden">
+          <div className="absolute inset-0 bg-slate-900/70 dark:bg-black/80 backdrop-blur-xl transition-all" onClick={closeSettings}></div>
+          <div className="relative bg-white dark:bg-slate-900 w-full max-w-lg rounded-[2.5rem] shadow-2xl flex flex-col max-h-[85vh] transition-all border border-white/10 overflow-hidden">
+            <div className="flex items-center justify-between p-6 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50">
               <div>
-                <h2 className="text-xl font-bold text-slate-800 dark:text-white flex items-center gap-2">
+                <h2 className="text-xl font-black text-slate-800 dark:text-white flex items-center gap-3">
                   <UserCheck className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
-                  我有帳戶的銀行
+                  我有哪些帳戶？
                 </h2>
-                <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">勾選後將顯示為「舊戶」利率並重新排序。</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 font-medium">勾選您已擁有的銀行，系統將自動套用「舊戶利率」。</p>
               </div>
-              <button onClick={closeSettings} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors text-slate-400 flex items-center justify-center">
-                <X className="w-6 h-6" />
+              <button onClick={closeSettings} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-all text-slate-400 hover:text-indigo-600 active:scale-90">
+                <X className="w-5 h-5" />
               </button>
             </div>
+            
             <div className="flex-1 overflow-y-auto p-6 space-y-2 custom-scrollbar">
-              {uniqueBanksForSettings.map((bank) => (
-                <button
-                  key={bank.code}
-                  onClick={() => toggleBankByCode(bank.code)}
-                  className={`flex items-center justify-between w-full px-4 py-3 rounded-xl border transition-all duration-200 group ${
-                    ownedBankCodes.has(bank.code)
-                      ? 'bg-indigo-50 dark:bg-indigo-900/30 border-indigo-200 dark:border-indigo-800 text-indigo-700 dark:text-indigo-300 shadow-sm'
-                      : 'bg-white dark:bg-slate-800/50 border-slate-100 dark:border-slate-700/50 text-slate-600 dark:text-slate-400 hover:border-indigo-200 dark:hover:border-indigo-700 hover:bg-slate-50 dark:hover:bg-slate-800'
-                  }`}
-                >
-                  <span className="flex items-center gap-3">
-                    <span className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${
-                      ownedBankCodes.has(bank.code) ? 'bg-indigo-600 border-indigo-600' : 'border-slate-300 dark:border-slate-600 group-hover:border-indigo-400'
-                    }`}>
-                      {ownedBankCodes.has(bank.code) && <Check className="w-3.5 h-3.5 text-white" />}
+              <div className="grid grid-cols-1 gap-2">
+                {uniqueBanksForSettings.map((bank) => (
+                  <button
+                    key={bank.code}
+                    onClick={() => toggleBankByCode(bank.code)}
+                    className={`flex items-center justify-between w-full px-4 py-3 rounded-xl border-2 transition-all duration-300 group ${
+                      ownedBankCodes.has(bank.code)
+                        ? 'bg-indigo-50 dark:bg-indigo-900/20 border-indigo-200 dark:border-indigo-800 text-indigo-800 dark:text-indigo-200 shadow-sm'
+                        : 'bg-white dark:bg-slate-800/50 border-slate-100 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:border-indigo-100 dark:hover:border-indigo-900'
+                    }`}
+                  >
+                    <span className="flex items-center gap-3">
+                      <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all ${
+                        ownedBankCodes.has(bank.code) ? 'bg-indigo-600 border-indigo-600 scale-105' : 'border-slate-200 dark:border-slate-700'
+                      }`}>
+                        {ownedBankCodes.has(bank.code) && <Check className="w-3.5 h-3.5 text-white font-black" />}
+                      </div>
+                      <span className="text-[10px] font-black bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded text-slate-500 dark:text-slate-400 tracking-wider">#{bank.code}</span>
+                      <span className="font-black text-sm">{bank.name.replace(/\(級距.\)/, '').trim()}</span>
                     </span>
-                    <span className="text-xs font-mono bg-slate-100 dark:bg-slate-700 px-1.5 py-0.5 rounded text-slate-500 dark:text-slate-400 group-hover:bg-indigo-100 dark:group-hover:bg-indigo-900 transition-colors">{bank.code}</span>
-                    <span className="font-semibold">{bank.name.replace(/\(級距.\)/, '').trim()}</span>
-                  </span>
-                </button>
-              ))}
+                  </button>
+                ))}
+              </div>
             </div>
-            <div className="p-6 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-950/20">
-              <span className="text-sm font-medium text-slate-500 dark:text-slate-400">已選 <span className="text-indigo-600 dark:text-indigo-400 font-bold">{ownedBankCodes.size}</span> 間銀行</span>
+
+            <div className="p-6 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/80 dark:bg-slate-900/80 backdrop-blur-md">
+              <div className="flex flex-col">
+                <span className="text-[10px] text-slate-400 dark:text-slate-500 font-black uppercase tracking-widest">已選擇</span>
+                <span className="text-base font-black text-indigo-600 dark:text-indigo-400">{ownedBankCodes.size} <span className="text-xs">間</span></span>
+              </div>
               <div className="flex gap-3">
-                <button onClick={() => setOwnedBankCodes(new Set())} className="text-slate-400 hover:text-red-500 text-sm font-medium transition-colors">清空</button>
-                <button onClick={closeSettings} className="px-6 py-2 bg-indigo-600 dark:bg-indigo-500 text-white rounded-xl font-bold text-sm hover:bg-indigo-700 dark:hover:bg-indigo-600 transition-colors shadow-lg">完成</button>
+                <button onClick={() => setOwnedBankCodes(new Set())} className="px-3 py-2 text-slate-400 hover:text-red-500 text-xs font-black transition-colors uppercase tracking-widest">清空</button>
+                <button onClick={closeSettings} className="px-8 py-3 bg-indigo-600 dark:bg-indigo-500 text-white rounded-xl font-black text-xs hover:scale-105 active:scale-95 transition-all shadow-xl shadow-indigo-500/30">確認</button>
               </div>
             </div>
           </div>
         </div>
       )}
 
-      <footer className="mt-12 text-center text-slate-400 dark:text-slate-600 text-[10px] md:text-xs pb-10 space-y-2 px-4 transition-colors">
-        <div className="flex items-center justify-center gap-2 flex-wrap">
-          <a href="https://www.ptt.cc/bbs/Bank_Service/M.1767533701.A.974.html" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-indigo-400 dark:text-indigo-500 hover:text-indigo-600 transition-colors">
-            資料來源：PTT Bank_Service <ExternalLink className="w-3 h-3" />
+      <footer className="mt-12 text-center text-slate-400 dark:text-slate-600 text-[10px] pb-10 space-y-3 px-6 transition-colors">
+        <div className="flex items-center justify-center gap-3 flex-wrap">
+          <a href="https://www.ptt.cc/bbs/Bank_Service/M.1767533701.A.974.html" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 font-black text-indigo-400 dark:text-indigo-600 hover:text-indigo-700 transition-colors uppercase tracking-widest">
+            來源：PTT <ExternalLink className="w-3 h-3" />
           </a>
-          <span className="hidden sm:inline opacity-30">|</span>
-          <p className="opacity-75">資料更新：2026年01月04日</p>
+          <span className="opacity-20">/</span>
+          <p className="font-bold tracking-tight">更新：2026/01/04</p>
         </div>
-        <p>© 2026 Taiwan Bank Rate Comparator</p>
-        <p className="opacity-60 max-w-md mx-auto">本工具僅供參考，實際利率及詳細條件請以各銀行官網最新公告為準。</p>
+        <p className="font-black tracking-[0.2em] opacity-40 uppercase">© 2026 Taiwan High Interest Tracker</p>
+        <p className="opacity-50 max-w-md mx-auto leading-relaxed font-medium italic">
+          Disclaimer: 本工具僅為試算，不保證數據準確。請以各銀行即時公告為準。
+        </p>
       </footer>
+
+      <style>{`
+        @keyframes pulse-slow {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.8; }
+        }
+        .animate-pulse-slow {
+          animation: pulse-slow 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+      `}</style>
     </div>
   );
 };
