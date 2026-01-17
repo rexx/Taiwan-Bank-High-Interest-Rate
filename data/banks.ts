@@ -25,7 +25,7 @@ export const BANKS: BankData[] = [
   },
   {
     id: '048-tier1',
-    name: '王道 O-Bank (級距一)',
+    name: '王道 O-Bank (1)',
     code: '048',
     newCustomer: {
       rate: 8.8,
@@ -46,7 +46,7 @@ export const BANKS: BankData[] = [
   },
   {
     id: '048-tier2',
-    name: '王道 O-Bank (級距二)',
+    name: '王道 O-Bank (2)',
     code: '048',
     newCustomer: {
       rate: 1.5,
