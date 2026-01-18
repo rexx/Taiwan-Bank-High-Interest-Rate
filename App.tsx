@@ -164,72 +164,90 @@ const App: React.FC = () => {
     const isSelectedForDeposit = depositAmount > 0;
 
     const getStatusLabel = () => {
-      if (isSelectedForDeposit) return isOwned ? '我有帳戶' : '推薦新開';
+      if (isSelectedForDeposit) return isOwned ? '舊戶專屬' : '推薦新開';
       if (isOwned) return '未配置';
       return includeNewAccounts ? '未配置' : '未申辦';
     };
 
     if (viewMode === 'card') {
+      const brandColorClass = isOwned ? 'emerald' : 'amber';
+      const borderColorClass = isOwned 
+        ? 'border-emerald-500/30 dark:border-emerald-500/40' 
+        : 'border-amber-500/30 dark:border-amber-500/40';
+      const borderStyleClass = isSelectedForDeposit ? 'border-solid' : 'border-dashed';
+      
       return (
         <div 
           key={bank.id}
-          className={`group relative overflow-hidden bg-white dark:bg-slate-900 rounded-3xl p-5 shadow-sm border-l-8 transition-all duration-500 hover:shadow-xl hover:-translate-y-0.5 ${
-            !isSelectedForDeposit 
-              ? 'border-slate-300 dark:border-slate-700' :
-            isOwned ? 'border-emerald-500 shadow-lg shadow-emerald-500/10' : 'border-amber-500 shadow-lg shadow-amber-500/10'
-          }`}
+          className={`group relative overflow-hidden bg-white dark:bg-[#0f172a] rounded-[2rem] p-6 shadow-sm border-2 transition-all duration-500 hover:shadow-2xl hover:-translate-y-1 ${borderColorClass} ${borderStyleClass}`}
         >
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div className="flex-1">
-              <div className="flex items-center gap-2 mb-2">
-                <span className={`text-[9px] px-2 py-0.5 rounded-full font-black uppercase tracking-[0.1em] shadow-sm ${
-                  isSelectedForDeposit ? (isOwned ? 'bg-emerald-500 text-white' : 'bg-amber-500 text-white') : 'bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400'
-                }`}>
-                  {getStatusLabel()}
+          <div className="space-y-5">
+            {/* Top Badges */}
+            <div className="flex items-center flex-wrap gap-2">
+              <span className={`text-[10px] px-3 py-1 rounded-full font-black tracking-wider shadow-sm ${
+                isOwned ? 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400' : 'bg-amber-500/20 text-amber-600 dark:text-amber-400'
+              }`}>
+                {getStatusLabel()}
+              </span>
+              <span className="text-slate-400 dark:text-slate-500 text-[10px] font-mono font-bold px-2">#{bank.code}</span>
+              {isSelectedForDeposit && (
+                <span className="text-[10px] px-3 py-1 rounded-full font-black tracking-wider bg-indigo-500/10 text-indigo-600 dark:text-indigo-400">
+                  推薦存放
                 </span>
-                <span className="text-slate-400 dark:text-slate-500 text-[10px] font-mono font-bold">#{bank.code}</span>
+              )}
+            </div>
+
+            {/* Title */}
+            <h3 className="text-xl md:text-2xl font-black text-slate-800 dark:text-slate-100 tracking-tight">{bank.name}</h3>
+
+            {/* Main Stats Grid */}
+            <div className="grid grid-cols-3 gap-2">
+              <div className="flex flex-col">
+                <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1">單筆上限</span>
+                <span className="text-sm font-black text-slate-700 dark:text-slate-300">{data.quota}</span>
               </div>
-              <h3 className="text-lg font-black text-slate-800 dark:text-slate-100 mb-3">{bank.name}</h3>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                <div className="flex flex-col">
-                  <span className="text-[9px] text-slate-400 font-black uppercase tracking-widest mb-0.5">單筆上限</span>
-                  <span className="text-xs font-bold text-slate-700 dark:text-slate-300">{data.quota}</span>
-                </div>
-                <div className="flex flex-col">
-                  <span className="text-[9px] text-slate-400 font-black uppercase tracking-widest mb-0.5">跨轉/提</span>
-                  <span className="text-xs font-bold text-slate-700 dark:text-slate-300">{data.transfers}</span>
-                </div>
-                <div className="flex flex-col col-span-2 sm:col-span-1">
-                  <span className="text-[9px] text-indigo-500 dark:text-indigo-400 font-black uppercase tracking-widest mb-0.5">建議存入</span>
-                  <span className={`text-base font-black ${isSelectedForDeposit ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-400 dark:text-slate-500'}`}>
-                    {isSelectedForDeposit ? formatCurrency(depositAmount) : '$0'}
-                  </span>
-                </div>
+              <div className="flex flex-col">
+                <span className={`text-[10px] font-bold uppercase tracking-widest mb-1 ${isSelectedForDeposit ? 'text-indigo-500 dark:text-indigo-400' : 'text-slate-400'}`}>建議存入</span>
+                <span className={`text-sm font-black ${isSelectedForDeposit ? 'text-indigo-600 dark:text-indigo-300' : 'text-slate-400 dark:text-slate-500'}`}>
+                  {isSelectedForDeposit ? formatCurrency(depositAmount) : '$0'}
+                </span>
+              </div>
+              <div className="flex flex-col">
+                <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1">跨轉/跨提</span>
+                <span className="text-sm font-black text-slate-700 dark:text-slate-300">{data.transfers}</span>
               </div>
             </div>
-            <div className={`flex flex-col items-start sm:items-end justify-center min-w-[120px] p-3 rounded-2xl border transition-colors ${
-              isSelectedForDeposit 
-              ? 'bg-slate-50 dark:bg-slate-800/50 border-slate-100 dark:border-slate-800' 
-              : 'bg-slate-100/50 dark:bg-slate-900/50 border-transparent border-dashed'
-            }`}>
-              <span className={`text-2xl md:text-3xl font-black tracking-tighter transition-colors ${
-                !isSelectedForDeposit ? 'text-slate-600 dark:text-slate-400' :
-                isOwned ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600 dark:text-amber-400'
-              }`}>{data.display}</span>
-              <span className="text-[9px] text-slate-400 dark:text-slate-500 font-black uppercase mt-0.5">專案年利率</span>
+
+            {/* Rate Section */}
+            <div className="pt-2">
+              <div className={`text-4xl md:text-5xl font-black tracking-tighter transition-colors leading-none ${
+                isOwned ? 'text-emerald-500 dark:text-emerald-400' : 'text-amber-500 dark:text-amber-400'
+              }`}>{data.display}</div>
+              <span className="text-[10px] text-slate-400 dark:text-slate-500 font-black uppercase mt-2 block tracking-widest">預期年利率</span>
             </div>
+
+            <div className="h-px bg-slate-100 dark:bg-slate-800/50 w-full"></div>
+
+            {/* Notes Section */}
+            {data.notes && (
+              <div className="text-[11px] text-slate-500 dark:text-slate-400 flex gap-2 items-start leading-relaxed font-medium">
+                <Info className="w-4 h-4 flex-shrink-0 text-slate-300 dark:text-slate-600" />
+                <span>{data.notes}</span>
+              </div>
+            )}
+
+            {/* Internal Progress Bar (Not stuck to outer frame) */}
+            {isSelectedForDeposit && data.numericQuota !== Infinity && (
+              <div className="pt-2">
+                <div className="w-full h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                  <div 
+                    className={`h-full transition-all duration-1000 ease-out rounded-full ${isOwned ? 'bg-emerald-500' : 'bg-amber-500'}`} 
+                    style={{ width: `${(depositAmount / data.numericQuota) * 100}%` }}
+                  ></div>
+                </div>
+              </div>
+            )}
           </div>
-          {data.notes && (
-            <div className="mt-4 pt-3 border-t border-slate-50 dark:border-slate-800/50 text-[11px] text-slate-500 dark:text-slate-400 flex gap-2 items-start bg-slate-50/50 dark:bg-slate-950/20 -mx-5 px-5 py-3">
-              <Info className="w-3.5 h-3.5 mt-0.5 flex-shrink-0 text-slate-300 dark:text-slate-600" />
-              <span className="leading-relaxed font-medium">{data.notes}</span>
-            </div>
-          )}
-          {isSelectedForDeposit && data.numericQuota !== Infinity && (
-            <div className="absolute bottom-0 left-0 w-full h-1 bg-slate-100 dark:bg-slate-800">
-              <div className={`h-full transition-all duration-1000 ease-out ${isOwned ? 'bg-emerald-500' : 'bg-amber-500'}`} style={{ width: `${(depositAmount / data.numericQuota) * 100}%` }}></div>
-            </div>
-          )}
         </div>
       );
     }
@@ -241,7 +259,7 @@ const App: React.FC = () => {
           onClick={() => toggleExpandRow(bank.id)}
           className={`group cursor-pointer transition-all relative hover:bg-indigo-50/30 dark:hover:bg-indigo-500/5 ${
             isSelectedForDeposit ? 'bg-indigo-50/10 dark:bg-indigo-500/5' : ''
-          } ${!isOwned && !includeNewAccounts ? 'bg-slate-50/50 dark:bg-slate-900/50' : ''}`}
+          }`}
         >
           <td className="px-5 py-3">
             <div className="flex items-center gap-2">
@@ -249,13 +267,12 @@ const App: React.FC = () => {
                 {bank.code}
               </span>
               <div className="flex items-center gap-2 truncate">
-                <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${isOwned ? 'bg-emerald-500 shadow-sm shadow-emerald-500/50' : 'bg-amber-500 shadow-sm shadow-amber-500/50 opacity-40'}`}></span>
-                <span className={`text-xs truncate ${isOwned ? 'text-slate-800 dark:text-slate-100 font-bold' : 'text-slate-400 dark:text-slate-500 font-medium'}`}>{bank.name}</span>
+                <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${isOwned ? 'bg-emerald-500 shadow-sm shadow-emerald-500/50' : 'bg-amber-500 shadow-sm shadow-amber-500/50'}`}></span>
+                <span className={`text-xs truncate font-bold ${isOwned ? 'text-slate-800 dark:text-slate-100' : 'text-slate-700 dark:text-slate-200'}`}>{bank.name}</span>
               </div>
             </div>
           </td>
           <td className={`px-5 py-3 text-right font-black text-xs whitespace-nowrap ${
-            !isSelectedForDeposit ? 'text-slate-400 dark:text-slate-600' :
             isOwned ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600 dark:text-amber-400'
           }`}>
             {data.display}
@@ -265,7 +282,7 @@ const App: React.FC = () => {
               {isSelectedForDeposit ? (
                 <span className="text-indigo-600 dark:text-indigo-400 font-black text-xs">{formatCurrency(depositAmount)}</span>
               ) : (
-                <span className="text-slate-400 dark:text-slate-500 text-[10px] font-bold">{getStatusLabel()}</span>
+                <span className={`text-[10px] font-black ${isOwned ? 'text-emerald-500/60' : 'text-amber-500/60'}`}>{getStatusLabel()}</span>
               )}
               {isSelectedForDeposit && data.numericQuota !== Infinity && (
                 <div className="w-16 h-0.5 bg-slate-200 dark:bg-slate-800 mt-1 rounded-full overflow-hidden">
@@ -416,7 +433,7 @@ const App: React.FC = () => {
             </div>
           </div>
 
-          {/* 整合式利息概覽面板 - 50/50 等寬分配 */}
+          {/* 整合式利息概覽面板 */}
           <div className="bg-rose-50/40 dark:bg-rose-950/20 p-4 md:p-6 rounded-[2rem] border-2 border-rose-100/50 dark:border-rose-900/30 relative overflow-hidden group transition-all">
             <div className="absolute top-[-30px] right-[-30px] opacity-[0.03] group-hover:opacity-[0.06] transition-opacity">
               <Coins className="w-32 h-32 text-rose-500" />
@@ -434,7 +451,7 @@ const App: React.FC = () => {
                 </div>
               </div>
 
-              {/* 右側：補充資訊 (50%) (堆疊，灰色文字與邊框，單行顯示且可溢出) */}
+              {/* 右側：補充資訊 (50%) */}
               <div className="w-1/2 min-w-0 flex flex-col gap-1.5 pl-2">
                 <div className="flex flex-row items-center justify-between gap-1 px-2 py-1.5 md:px-3 md:py-2 bg-transparent rounded-xl md:rounded-2xl border-2 border-slate-300/40 dark:border-slate-700/40 w-full min-w-0">
                   <span className="text-[9px] md:text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider whitespace-nowrap flex-shrink-0">預估年利息</span>
@@ -508,13 +525,15 @@ const App: React.FC = () => {
             <p className="text-slate-500 mt-2 max-w-xs mx-auto text-sm">請點擊右上角「帳戶勾選」或開啟「包含新開戶建議」。</p>
           </div>
         ) : viewMode === 'card' ? (
-          <div className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {includeNewAccounts ? (
               sortedBanks.map(renderBankItem)
             ) : (
               <>
                 {ownedBanksList.map(renderBankItem)}
-                {renderSeparator()}
+                <div className="col-span-1 md:col-span-2">
+                   {renderSeparator()}
+                </div>
                 {unownedBanksList.map(renderBankItem)}
               </>
             )}
