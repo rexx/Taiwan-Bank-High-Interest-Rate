@@ -2,7 +2,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { BANKS } from './data/banks';
 import { BankData, BankRateInfo } from './types';
-import { Check, Info, Wallet, UserCheck, ExternalLink, X, Calculator, TrendingUp, Moon, Sun, UserPlus, ShieldCheck, Ban, LayoutGrid, List, ChevronDown, ChevronUp, CheckCircle2, PlusCircle } from 'lucide-react';
+import { Check, Info, Wallet, UserCheck, ExternalLink, X, Calculator, TrendingUp, Moon, Sun, UserPlus, ShieldCheck, Ban, LayoutGrid, List, ChevronDown, ChevronUp, CheckCircle2, PlusCircle, Coins } from 'lucide-react';
 
 const LOCAL_STORAGE_KEY = 'taiwan-bank-owned-ids';
 const SETUP_COMPLETED_KEY = 'taiwan-bank-setup-completed';
@@ -98,7 +98,6 @@ const App: React.FC = () => {
 
   const toggleTheme = () => setIsDarkMode(prev => !prev);
 
-  // Sorting and Grouping logic based on mode
   const sortedBanks = useMemo(() => {
     const allBanksSortedByRate = [...BANKS].sort((a, b) => {
       const aIsOwned = ownedBankCodes.has(a.code);
@@ -395,7 +394,7 @@ const App: React.FC = () => {
       </header>
 
       <main className="max-w-4xl mx-auto px-4 py-6">
-        {/* Statistics Dashboard with Restored Styling */}
+        {/* Statistics Dashboard */}
         <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] p-6 shadow-xl shadow-slate-200/50 dark:shadow-none border border-slate-100 dark:border-slate-800 mb-6 space-y-6 transition-all">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
             <div className="flex-1">
@@ -417,16 +416,40 @@ const App: React.FC = () => {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="bg-emerald-50 dark:bg-emerald-950/20 p-5 rounded-3xl flex items-center justify-between border border-emerald-100 dark:border-emerald-900/30 transition-all">
-              <span className="text-emerald-600 dark:text-emerald-400 font-black text-sm tracking-tight uppercase">預估年利息</span>
-              <span className="text-2xl md:text-3xl font-black text-emerald-700 dark:text-emerald-300">{formatCurrency(allocation.totalInterest)}</span>
+          {/* 整合式利息概覽面板 - 50/50 等寬分配 */}
+          <div className="bg-rose-50/40 dark:bg-rose-950/20 p-4 md:p-6 rounded-[2rem] border-2 border-rose-100/50 dark:border-rose-900/30 relative overflow-hidden group transition-all">
+            <div className="absolute top-[-30px] right-[-30px] opacity-[0.03] group-hover:opacity-[0.06] transition-opacity">
+              <Coins className="w-32 h-32 text-rose-500" />
             </div>
-            <div className="bg-indigo-50 dark:bg-indigo-950/20 p-5 rounded-3xl flex items-center justify-between border border-indigo-100 dark:border-indigo-900/30 transition-all">
-              <span className="text-indigo-600 dark:text-indigo-400 font-black text-sm tracking-tight uppercase">平均利率</span>
-              <span className="text-2xl md:text-3xl font-black text-indigo-700 dark:text-indigo-300">
-                {totalCash > 0 ? ((allocation.totalInterest / totalCash) * 100).toFixed(3) : '0.000'}%
-              </span>
+            
+            <div className="flex flex-row items-center relative z-10 w-full">
+              {/* 左側：主月利息 (50%) */}
+              <div className="w-1/2 min-w-0 pr-2">
+                <div className="flex items-center gap-1 text-rose-600 dark:text-rose-400 font-black text-[10px] md:text-xs tracking-widest uppercase mb-0.5 whitespace-nowrap overflow-hidden">
+                  <Coins className="w-3 h-3 flex-shrink-0" />
+                  <span className="truncate">平均每月可領</span>
+                </div>
+                <div className="text-2xl md:text-4xl font-black text-rose-700 dark:text-rose-300 tracking-tighter transition-all truncate">
+                  {formatCurrency(allocation.totalInterest / 12)}
+                </div>
+              </div>
+
+              {/* 右側：補充資訊 (50%) (堆疊，灰色文字與邊框，單行顯示且可溢出) */}
+              <div className="w-1/2 min-w-0 flex flex-col gap-1.5 pl-2">
+                <div className="flex flex-row items-center justify-between gap-1 px-2 py-1.5 md:px-3 md:py-2 bg-transparent rounded-xl md:rounded-2xl border-2 border-slate-300/40 dark:border-slate-700/40 w-full min-w-0">
+                  <span className="text-[9px] md:text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider whitespace-nowrap flex-shrink-0">預估年利息</span>
+                  <span className="text-xs md:text-base font-black text-slate-600 dark:text-slate-300 whitespace-nowrap truncate text-right flex-1">
+                    {formatCurrency(allocation.totalInterest)}
+                  </span>
+                </div>
+                
+                <div className="flex flex-row items-center justify-between gap-1 px-2 py-1.5 md:px-3 md:py-2 bg-transparent rounded-xl md:rounded-2xl border-2 border-slate-300/40 dark:border-slate-700/40 w-full min-w-0">
+                  <span className="text-[9px] md:text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider whitespace-nowrap flex-shrink-0">平均年利率</span>
+                  <span className="text-xs md:text-base font-black text-slate-600 dark:text-slate-300 whitespace-nowrap truncate text-right flex-1">
+                    {totalCash > 0 ? ((allocation.totalInterest / totalCash) * 100).toFixed(3) : '0.000'}%
+                  </span>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -596,16 +619,6 @@ const App: React.FC = () => {
           Disclaimer: 本工具僅為試算，不保證數據準確。請以各銀行即時公告為準。
         </p>
       </footer>
-
-      <style>{`
-        @keyframes pulse-slow {
-          0%, 100% { opacity: 1; }
-          50% { opacity: 0.8; }
-        }
-        .animate-pulse-slow {
-          animation: pulse-slow 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-        }
-      `}</style>
     </div>
   );
 };
