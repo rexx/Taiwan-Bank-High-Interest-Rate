@@ -2,12 +2,12 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { BANKS } from './data/banks';
 import { BankData, BankRateInfo } from './types';
-import { Check, Info, Wallet, UserCheck, ExternalLink, X, Calculator, TrendingUp, Moon, Sun, UserPlus, ShieldCheck, Ban, LayoutGrid, List, ChevronDown, ChevronUp, CheckCircle2, PlusCircle, Coins } from 'lucide-react';
+import { Check, Info, Wallet, UserCheck, ExternalLink, X, Calculator, TrendingUp, Moon, Sun, UserPlus, ShieldCheck, Ban, LayoutGrid, List, ChevronDown, ChevronUp, CheckCircle2, PlusCircle, Coins, Heart, HeartOff } from 'lucide-react';
 
-const LOCAL_STORAGE_KEY = 'taiwan-bank-owned-ids';
+const OWNED_KEY = 'taiwan-bank-owned-ids-v2';
+const CONSIDERING_KEY = 'taiwan-bank-considering-ids-v2';
 const SETUP_COMPLETED_KEY = 'taiwan-bank-setup-completed';
 const THEME_KEY = 'taiwan-bank-theme';
-const INCLUDE_NEW_KEY = 'taiwan-bank-include-new';
 const VIEW_MODE_KEY = 'taiwan-bank-view-mode';
 
 const DEFAULT_BANK_CODES = ['812', '017', '807', '048', '004']; // 台新, 兆豐, 永豐, 王道, 台銀
@@ -15,7 +15,7 @@ const DEFAULT_CASH = 1000000;
 
 const App: React.FC = () => {
   const [ownedBankCodes, setOwnedBankCodes] = useState<Set<string>>(() => {
-    const saved = localStorage.getItem(LOCAL_STORAGE_KEY);
+    const saved = localStorage.getItem(OWNED_KEY);
     if (saved) {
       try {
         return new Set(JSON.parse(saved));
@@ -26,15 +26,22 @@ const App: React.FC = () => {
     return new Set(DEFAULT_BANK_CODES);
   });
 
+  const [consideringBankCodes, setConsideringBankCodes] = useState<Set<string>>(() => {
+    const saved = localStorage.getItem(CONSIDERING_KEY);
+    if (saved) {
+      try {
+        return new Set(JSON.parse(saved));
+      } catch (e) {
+        return new Set();
+      }
+    }
+    return new Set();
+  });
+
   const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
     const savedTheme = localStorage.getItem(THEME_KEY);
     if (savedTheme) return savedTheme === 'dark';
     return window.matchMedia('(prefers-color-scheme: dark)').matches;
-  });
-
-  const [includeNewAccounts, setIncludeNewAccounts] = useState<boolean>(() => {
-    const saved = localStorage.getItem(INCLUDE_NEW_KEY);
-    return saved === 'true'; 
   });
 
   const [viewMode, setViewMode] = useState<'card' | 'compact'>(() => {
@@ -46,12 +53,12 @@ const App: React.FC = () => {
   const [totalCash, setTotalCash] = useState<number>(DEFAULT_CASH);
 
   useEffect(() => {
-    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(Array.from(ownedBankCodes)));
+    localStorage.setItem(OWNED_KEY, JSON.stringify(Array.from(ownedBankCodes)));
   }, [ownedBankCodes]);
 
   useEffect(() => {
-    localStorage.setItem(INCLUDE_NEW_KEY, includeNewAccounts.toString());
-  }, [includeNewAccounts]);
+    localStorage.setItem(CONSIDERING_KEY, JSON.stringify(Array.from(consideringBankCodes)));
+  }, [consideringBankCodes]);
 
   useEffect(() => {
     localStorage.setItem(VIEW_MODE_KEY, viewMode);
@@ -79,14 +86,30 @@ const App: React.FC = () => {
     localStorage.setItem(SETUP_COMPLETED_KEY, 'true');
   };
 
-  const toggleBankByCode = (code: string) => {
-    const newSet = new Set(ownedBankCodes);
-    if (newSet.has(code)) {
-      newSet.delete(code);
+  const toggleBankOwnedByCode = (code: string) => {
+    const newOwned = new Set(ownedBankCodes);
+    const newConsidering = new Set(consideringBankCodes);
+    
+    if (newOwned.has(code)) {
+      newOwned.delete(code);
     } else {
-      newSet.add(code);
+      newOwned.add(code);
+      newConsidering.delete(code); // If owned, cannot be 'considering'
     }
-    setOwnedBankCodes(newSet);
+    setOwnedBankCodes(newOwned);
+    setConsideringBankCodes(newConsidering);
+  };
+
+  const toggleBankConsideringByCode = (code: string) => {
+    if (ownedBankCodes.has(code)) return; // Cannot consider if already owned
+
+    const newConsidering = new Set(consideringBankCodes);
+    if (newConsidering.has(code)) {
+      newConsidering.delete(code);
+    } else {
+      newConsidering.add(code);
+    }
+    setConsideringBankCodes(newConsidering);
   };
 
   const toggleExpandRow = (id: string) => {
@@ -98,23 +121,26 @@ const App: React.FC = () => {
 
   const toggleTheme = () => setIsDarkMode(prev => !prev);
 
+  // Core Sorting Logic
   const sortedBanks = useMemo(() => {
-    const allBanksSortedByRate = [...BANKS].sort((a, b) => {
-      const aIsOwned = ownedBankCodes.has(a.code);
-      const bIsOwned = ownedBankCodes.has(b.code);
-      const aRate = aIsOwned ? a.oldCustomer.rate : a.newCustomer.rate;
-      const bRate = bIsOwned ? b.oldCustomer.rate : b.newCustomer.rate;
+    return [...BANKS].sort((a, b) => {
+      const aOwned = ownedBankCodes.has(a.code);
+      const aConsidering = consideringBankCodes.has(a.code);
+      const bOwned = ownedBankCodes.has(b.code);
+      const bConsidering = consideringBankCodes.has(b.code);
+
+      const aPriority = aOwned || aConsidering ? 1 : 0;
+      const bPriority = bOwned || bConsidering ? 1 : 0;
+
+      // Group High Priority (Owned/Considering) at the top
+      if (aPriority !== bPriority) return bPriority - aPriority;
+
+      // Same group: Sort by current effective rate
+      const aRate = aOwned ? a.oldCustomer.rate : a.newCustomer.rate;
+      const bRate = bOwned ? b.oldCustomer.rate : b.newCustomer.rate;
       return bRate - aRate;
     });
-
-    if (includeNewAccounts) {
-      return allBanksSortedByRate;
-    } else {
-      const owned = allBanksSortedByRate.filter(b => ownedBankCodes.has(b.code));
-      const unowned = allBanksSortedByRate.filter(b => !ownedBankCodes.has(b.code));
-      return [...owned, ...unowned];
-    }
-  }, [ownedBankCodes, includeNewAccounts]);
+  }, [ownedBankCodes, consideringBankCodes]);
 
   const allocation = useMemo(() => {
     let remaining = totalCash;
@@ -123,9 +149,10 @@ const App: React.FC = () => {
 
     for (const bank of sortedBanks) {
       const isOwned = ownedBankCodes.has(bank.code);
-      const data = isOwned ? bank.oldCustomer : bank.newCustomer;
+      const isConsidering = consideringBankCodes.has(bank.code);
+      const isActive = isOwned || isConsidering;
       
-      if (!includeNewAccounts && !isOwned) {
+      if (!isActive) {
         result[bank.id] = 0;
         continue;
       }
@@ -135,6 +162,7 @@ const App: React.FC = () => {
         continue;
       }
 
+      const data = isOwned ? bank.oldCustomer : bank.newCustomer;
       const deposit = Math.min(remaining, data.numericQuota);
       result[bank.id] = deposit;
       totalInterest += deposit * (data.rate / 100);
@@ -142,7 +170,7 @@ const App: React.FC = () => {
     }
 
     return { result, totalInterest, remaining };
-  }, [totalCash, sortedBanks, ownedBankCodes, includeNewAccounts]);
+  }, [totalCash, sortedBanks, ownedBankCodes, consideringBankCodes]);
 
   const uniqueBanksForSettings = useMemo(() => {
     const seen = new Set();
@@ -159,41 +187,52 @@ const App: React.FC = () => {
 
   const renderBankItem = (bank: BankData) => {
     const isOwned = ownedBankCodes.has(bank.code);
+    const isConsidering = consideringBankCodes.has(bank.code);
     const data: BankRateInfo = isOwned ? bank.oldCustomer : bank.newCustomer;
     const depositAmount = allocation.result[bank.id] || 0;
     const isSelectedForDeposit = depositAmount > 0;
 
     const getStatusLabel = () => {
-      if (isSelectedForDeposit) return isOwned ? '舊戶專屬' : '推薦新開';
-      if (isOwned) return '未配置';
-      return includeNewAccounts ? '未配置' : '未申辦';
+      if (isOwned) return '已持有 (舊戶)';
+      if (isConsidering) return '考慮申辦 (新戶)';
+      return '未申辦';
     };
 
+    const getStatusColors = () => {
+      if (isOwned) return { bg: 'bg-emerald-500/20', text: 'text-emerald-600 dark:text-emerald-400', border: 'border-emerald-500/30' };
+      if (isConsidering) return { bg: 'bg-indigo-500/20', text: 'text-indigo-600 dark:text-indigo-400', border: 'border-indigo-500/30' };
+      return { bg: 'bg-slate-500/10', text: 'text-slate-400 dark:text-slate-500', border: 'border-slate-300/30 dark:border-slate-800' };
+    };
+
+    const colors = getStatusColors();
+
     if (viewMode === 'card') {
-      const brandColorClass = isOwned ? 'emerald' : 'amber';
-      const borderColorClass = isOwned 
-        ? 'border-emerald-500/30 dark:border-emerald-500/40' 
-        : 'border-amber-500/30 dark:border-amber-500/40';
-      const borderStyleClass = isSelectedForDeposit ? 'border-solid' : 'border-dashed';
-      
       return (
         <div 
           key={bank.id}
-          className={`group relative overflow-hidden bg-white dark:bg-[#0f172a] rounded-[2rem] p-6 shadow-sm border-2 transition-all duration-500 hover:shadow-2xl hover:-translate-y-1 ${borderColorClass} ${borderStyleClass}`}
+          className={`group relative overflow-hidden bg-white dark:bg-[#0f172a] rounded-[2rem] p-6 shadow-sm border-2 transition-all duration-500 hover:shadow-2xl hover:-translate-y-1 ${colors.border} ${isSelectedForDeposit ? 'border-solid shadow-lg shadow-indigo-500/5' : 'border-dashed'}`}
         >
           <div className="space-y-5">
             {/* Top Badges */}
-            <div className="flex items-center flex-wrap gap-2">
-              <span className={`text-[10px] px-3 py-1 rounded-full font-black tracking-wider shadow-sm ${
-                isOwned ? 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400' : 'bg-amber-500/20 text-amber-600 dark:text-amber-400'
-              }`}>
-                {getStatusLabel()}
-              </span>
-              <span className="text-slate-400 dark:text-slate-500 text-[10px] font-mono font-bold px-2">#{bank.code}</span>
-              {isSelectedForDeposit && (
-                <span className="text-[10px] px-3 py-1 rounded-full font-black tracking-wider bg-indigo-500/10 text-indigo-600 dark:text-indigo-400">
-                  推薦存放
+            <div className="flex items-center justify-between">
+              <div className="flex items-center flex-wrap gap-2">
+                <span className={`text-[10px] px-3 py-1 rounded-full font-black tracking-wider shadow-sm ${colors.bg} ${colors.text}`}>
+                  {getStatusLabel()}
                 </span>
+                <span className="text-slate-400 dark:text-slate-500 text-[10px] font-mono font-bold px-2">#{bank.code}</span>
+              </div>
+              {!isOwned && (
+                <button 
+                  onClick={(e) => { e.stopPropagation(); toggleBankConsideringByCode(bank.code); }}
+                  className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black transition-all ${
+                    isConsidering 
+                      ? 'bg-rose-500 text-white shadow-md shadow-rose-500/20' 
+                      : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:bg-rose-50 dark:hover:bg-rose-900/20 hover:text-rose-600'
+                  }`}
+                >
+                  {isConsidering ? <HeartOff className="w-3 h-3" /> : <Heart className="w-3 h-3" />}
+                  {isConsidering ? '取消考慮' : '考慮申辦'}
+                </button>
               )}
             </div>
 
@@ -221,27 +260,29 @@ const App: React.FC = () => {
             {/* Rate Section */}
             <div className="pt-2">
               <div className={`text-4xl md:text-5xl font-black tracking-tighter transition-colors leading-none ${
-                isOwned ? 'text-emerald-500 dark:text-emerald-400' : 'text-amber-500 dark:text-amber-400'
+                isOwned ? 'text-emerald-500 dark:text-emerald-400' : (isConsidering ? 'text-indigo-500 dark:text-indigo-400' : 'text-slate-300 dark:text-slate-700')
               }`}>{data.display}</div>
-              <span className="text-[10px] text-slate-400 dark:text-slate-500 font-black uppercase mt-2 block tracking-widest">預期年利率</span>
+              <span className="text-[10px] text-slate-400 dark:text-slate-500 font-black uppercase mt-2 block tracking-widest">
+                {isOwned ? '舊戶專屬利率' : '新戶開戶利率'}
+              </span>
             </div>
 
             <div className="h-px bg-slate-100 dark:bg-slate-800/50 w-full"></div>
 
             {/* Notes Section */}
             {data.notes && (
-              <div className="text-[11px] text-slate-500 dark:text-slate-400 flex gap-2 items-start leading-relaxed font-medium">
+              <div className="text-[11px] text-slate-500 dark:text-slate-400 flex gap-2 items-start leading-relaxed font-medium min-h-[2.5rem]">
                 <Info className="w-4 h-4 flex-shrink-0 text-slate-300 dark:text-slate-600" />
                 <span>{data.notes}</span>
               </div>
             )}
 
-            {/* Internal Progress Bar (Not stuck to outer frame) */}
+            {/* Internal Progress Bar */}
             {isSelectedForDeposit && data.numericQuota !== Infinity && (
               <div className="pt-2">
                 <div className="w-full h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
                   <div 
-                    className={`h-full transition-all duration-1000 ease-out rounded-full ${isOwned ? 'bg-emerald-500' : 'bg-amber-500'}`} 
+                    className={`h-full transition-all duration-1000 ease-out rounded-full ${isOwned ? 'bg-emerald-500' : 'bg-indigo-500'}`} 
                     style={{ width: `${(depositAmount / data.numericQuota) * 100}%` }}
                   ></div>
                 </div>
@@ -261,41 +302,55 @@ const App: React.FC = () => {
             isSelectedForDeposit ? 'bg-indigo-50/10 dark:bg-indigo-500/5' : ''
           }`}
         >
-          <td className="px-5 py-3">
+          <td className="px-5 py-4">
             <div className="flex items-center gap-2">
               <span className="text-[9px] text-slate-400 dark:text-slate-500 font-black bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded-md flex-shrink-0">
                 {bank.code}
               </span>
               <div className="flex items-center gap-2 truncate">
-                <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${isOwned ? 'bg-emerald-500 shadow-sm shadow-emerald-500/50' : 'bg-amber-500 shadow-sm shadow-amber-500/50'}`}></span>
-                <span className={`text-xs truncate font-bold ${isOwned ? 'text-slate-800 dark:text-slate-100' : 'text-slate-700 dark:text-slate-200'}`}>{bank.name}</span>
+                <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${isOwned ? 'bg-emerald-500' : (isConsidering ? 'bg-indigo-500' : 'bg-slate-300 dark:bg-slate-700')}`}></span>
+                <span className={`text-xs truncate font-bold ${isOwned || isConsidering ? 'text-slate-800 dark:text-slate-100' : 'text-slate-400 dark:text-slate-600'}`}>{bank.name}</span>
               </div>
             </div>
           </td>
-          <td className={`px-5 py-3 text-right font-black text-xs whitespace-nowrap ${
-            isOwned ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600 dark:text-amber-400'
+          <td className={`px-5 py-4 text-right font-black text-xs whitespace-nowrap ${
+            isOwned ? 'text-emerald-600 dark:text-emerald-400' : (isConsidering ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-400 dark:text-slate-700')
           }`}>
             {data.display}
           </td>
-          <td className="px-5 py-3 text-right whitespace-nowrap">
-            <div className="flex flex-col items-end">
+          <td className="px-5 py-4 text-right whitespace-nowrap">
+            <div className="flex flex-col items-end gap-1.5">
               {isSelectedForDeposit ? (
-                <span className="text-indigo-600 dark:text-indigo-400 font-black text-xs">{formatCurrency(depositAmount)}</span>
+                <>
+                  <span className="text-indigo-600 dark:text-indigo-400 font-black text-xs">{formatCurrency(depositAmount)}</span>
+                  {data.numericQuota !== Infinity && (
+                    <div className="w-16 h-1 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                      <div 
+                        className={`h-full transition-all duration-1000 ${isOwned ? 'bg-emerald-500' : 'bg-indigo-500'}`}
+                        style={{ width: `${Math.min(100, (depositAmount / data.numericQuota) * 100)}%` }}
+                      ></div>
+                    </div>
+                  )}
+                </>
               ) : (
-                <span className={`text-[10px] font-black ${isOwned ? 'text-emerald-500/60' : 'text-amber-500/60'}`}>{getStatusLabel()}</span>
-              )}
-              {isSelectedForDeposit && data.numericQuota !== Infinity && (
-                <div className="w-16 h-0.5 bg-slate-200 dark:bg-slate-800 mt-1 rounded-full overflow-hidden">
-                  <div 
-                    className={`h-full transition-all duration-1000 ${isOwned ? 'bg-emerald-500' : 'bg-amber-500'}`}
-                    style={{ width: `${(depositAmount / data.numericQuota) * 100}%` }}
-                  ></div>
-                </div>
+                <span className="text-[10px] font-black text-slate-300 dark:text-slate-700">$0</span>
               )}
             </div>
           </td>
-          <td className="px-5 py-3 text-right text-[10px] text-slate-500 dark:text-slate-400 font-black whitespace-nowrap opacity-60">{data.quota}</td>
-          <td className="px-3 py-3">
+          <td className="px-5 py-4 text-right">
+             <div className="flex items-center justify-end gap-2">
+                {!isOwned && (
+                  <button 
+                    onClick={(e) => { e.stopPropagation(); toggleBankConsideringByCode(bank.code); }}
+                    className={`p-1.5 rounded-lg transition-all ${isConsidering ? 'bg-rose-500 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-400 hover:text-rose-500'}`}
+                  >
+                    {isConsidering ? <HeartOff className="w-3.5 h-3.5" /> : <Heart className="w-3.5 h-3.5" />}
+                  </button>
+                )}
+                <div className="text-[10px] text-slate-500 dark:text-slate-400 font-black whitespace-nowrap opacity-60 w-16 text-right">{data.quota}</div>
+             </div>
+          </td>
+          <td className="px-3 py-4">
             {isExpanded ? <ChevronUp className="w-4 h-4 text-slate-300" /> : <ChevronDown className="w-4 h-4 text-slate-300" />}
           </td>
         </tr>
@@ -307,7 +362,7 @@ const App: React.FC = () => {
                   <div className="flex items-center gap-3 text-[10px] font-black uppercase tracking-wider text-slate-400">
                     <div className="flex items-center gap-1">
                       <ShieldCheck className="w-3.5 h-3.5" />
-                      <span>{isOwned ? '已持有帳戶' : '可開新戶'}</span>
+                      <span>{getStatusLabel()}</span>
                     </div>
                     <div className="flex items-center gap-1">
                       <Calculator className="w-3.5 h-3.5" />
@@ -330,7 +385,7 @@ const App: React.FC = () => {
                       </div>
                       <div className="h-1 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
                         <div 
-                          className={`h-full transition-all duration-1000 ${isOwned ? 'bg-emerald-500' : 'bg-amber-500'}`}
+                          className={`h-full transition-all duration-1000 ${isOwned ? 'bg-emerald-500' : 'bg-indigo-500'}`}
                           style={{ width: `${(depositAmount / data.numericQuota) * 100}%` }}
                         ></div>
                       </div>
@@ -356,7 +411,7 @@ const App: React.FC = () => {
         </p>
         <p className="text-[11px] text-amber-600/70 dark:text-amber-500/60 font-bold flex items-center justify-center gap-1">
           <PlusCircle className="w-3.5 h-3.5" />
-          現有高利額度已滿，可申辦以下銀行帳戶
+          現有高利額度已滿，可點擊「考慮申辦」來擴充額度
         </p>
       </div>
     ) : (
@@ -368,7 +423,7 @@ const App: React.FC = () => {
             </span>
             <span className="text-[10px] text-amber-600/70 dark:text-amber-500/60 font-bold flex items-center gap-1 mt-0.5">
               <PlusCircle className="w-3 h-3" />
-              現有高利額度已滿，可申辦以下銀行帳戶
+              現有高利額度已滿，可點擊下方愛心考慮申辦
             </span>
           </div>
         </td>
@@ -376,11 +431,11 @@ const App: React.FC = () => {
     );
   };
 
-  const { ownedBanksList, unownedBanksList } = useMemo(() => {
-    const owned = sortedBanks.filter(b => ownedBankCodes.has(b.code));
-    const unowned = sortedBanks.filter(b => !ownedBankCodes.has(b.code));
-    return { ownedBanksList: owned, unownedBanksList: unowned };
-  }, [sortedBanks, ownedBankCodes]);
+  const { activeBanks, inactiveBanks } = useMemo(() => {
+    const active = sortedBanks.filter(b => ownedBankCodes.has(b.code) || consideringBankCodes.has(b.code));
+    const inactive = sortedBanks.filter(b => !ownedBankCodes.has(b.code) && !consideringBankCodes.has(b.code));
+    return { activeBanks: active, inactiveBanks: inactive };
+  }, [sortedBanks, ownedBankCodes, consideringBankCodes]);
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-300 pb-20 font-sans">
@@ -404,7 +459,7 @@ const App: React.FC = () => {
               className="flex items-center gap-2 px-3 py-2 bg-white text-indigo-700 dark:bg-indigo-500 dark:text-white rounded-full font-bold text-xs md:text-sm hover:scale-105 active:scale-95 transition-all shadow-xl shadow-indigo-500/20"
             >
               <UserCheck className="w-4 h-4" />
-              <span>帳戶勾選</span>
+              <span>帳戶管理</span>
             </button>
           </div>
         </div>
@@ -417,7 +472,7 @@ const App: React.FC = () => {
             <div className="flex-1">
               <label className="text-xs font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.1em] mb-2.5 flex items-center gap-2">
                 <Wallet className="w-4 h-4 text-indigo-500" />
-                我的總流動資產
+                流動資金 (萬元)
               </label>
               <div className="relative group max-w-md">
                 <span className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 text-2xl font-black transition-colors group-focus-within:text-indigo-500">$</span>
@@ -444,7 +499,7 @@ const App: React.FC = () => {
               <div className="w-1/2 min-w-0 pr-2">
                 <div className="flex items-center gap-1 text-rose-600 dark:text-rose-400 font-black text-[10px] md:text-xs tracking-widest uppercase mb-0.5 whitespace-nowrap overflow-hidden">
                   <Coins className="w-3 h-3 flex-shrink-0" />
-                  <span className="truncate">平均每月可領</span>
+                  <span className="truncate">平均每月利息</span>
                 </div>
                 <div className="text-2xl md:text-4xl font-black text-rose-700 dark:text-rose-300 tracking-tighter transition-all truncate">
                   {formatCurrency(allocation.totalInterest / 12)}
@@ -461,7 +516,7 @@ const App: React.FC = () => {
                 </div>
                 
                 <div className="flex flex-row items-center justify-between gap-1 px-2 py-1.5 md:px-3 md:py-2 bg-transparent rounded-xl md:rounded-2xl border-2 border-slate-300/40 dark:border-slate-700/40 w-full min-w-0">
-                  <span className="text-[9px] md:text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider whitespace-nowrap flex-shrink-0">平均年利率</span>
+                  <span className="text-[9px] md:text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider whitespace-nowrap flex-shrink-0">資產年化</span>
                   <span className="text-xs md:text-base font-black text-slate-600 dark:text-slate-300 whitespace-nowrap truncate text-right flex-1">
                     {totalCash > 0 ? ((allocation.totalInterest / totalCash) * 100).toFixed(3) : '0.000'}%
                   </span>
@@ -469,34 +524,12 @@ const App: React.FC = () => {
               </div>
             </div>
           </div>
-
-          <div className="pt-4 border-t border-slate-50 dark:border-slate-800/50 flex flex-col sm:flex-row items-center justify-between gap-4">
-             <div className="flex items-center gap-3">
-                <div className={`p-2 rounded-xl transition-all shadow-sm ${includeNewAccounts ? 'bg-amber-100 dark:bg-amber-900/40 text-amber-600' : 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600'}`}>
-                   {includeNewAccounts ? <UserPlus className="w-5 h-5" /> : <ShieldCheck className="w-5 h-5" />}
-                </div>
-                <div>
-                   <p className="text-sm font-black text-slate-800 dark:text-slate-100">
-                      {includeNewAccounts ? '包含新開戶建議 (更積極)' : '僅考慮現有帳戶 (更穩健)'}
-                   </p>
-                   <p className="text-[10px] text-slate-400 dark:text-slate-500 font-medium">
-                      {includeNewAccounts ? '自動比對我沒勾選的銀行，並按利率高低混和排序' : '優先配置資金於我有勾選的帳戶中，並將其置頂'}
-                   </p>
-                </div>
-             </div>
-             <button 
-                onClick={() => setIncludeNewAccounts(!includeNewAccounts)}
-                className={`relative inline-flex h-8 w-16 items-center rounded-full transition-all ring-2 ring-offset-2 dark:ring-offset-slate-900 ring-transparent shadow-lg ${includeNewAccounts ? 'bg-amber-500' : 'bg-emerald-500'}`}
-             >
-                <span className={`inline-block h-6 w-6 transform rounded-full bg-white shadow-md transition-transform duration-300 ease-in-out ${includeNewAccounts ? 'translate-x-9' : 'translate-x-1'}`} />
-             </button>
-          </div>
         </div>
 
         <div className="flex items-center justify-between mb-4 px-2">
           <h2 className="text-lg font-black text-slate-800 dark:text-slate-200 flex items-center gap-2">
             <CheckCircle2 className="w-5 h-5 text-indigo-500" />
-            建議存放配置
+            存款配置建議
           </h2>
           <div className="flex bg-slate-200/50 dark:bg-slate-800/50 p-1 rounded-xl border border-slate-200/50 dark:border-slate-800">
             <button 
@@ -516,27 +549,13 @@ const App: React.FC = () => {
           </div>
         </div>
 
-        {sortedBanks.length === 0 ? (
-          <div className="py-20 text-center bg-white dark:bg-slate-900 rounded-[2rem] border-2 border-dashed border-slate-200 dark:border-slate-800">
-            <div className="bg-slate-100 dark:bg-slate-800 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Ban className="w-8 h-8 text-slate-400" />
-            </div>
-            <h3 className="text-lg font-bold text-slate-800 dark:text-slate-200">目前沒有顯示任何帳戶</h3>
-            <p className="text-slate-500 mt-2 max-w-xs mx-auto text-sm">請點擊右上角「帳戶勾選」或開啟「包含新開戶建議」。</p>
-          </div>
-        ) : viewMode === 'card' ? (
+        {viewMode === 'card' ? (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {includeNewAccounts ? (
-              sortedBanks.map(renderBankItem)
-            ) : (
-              <>
-                {ownedBanksList.map(renderBankItem)}
-                <div className="col-span-1 md:col-span-2">
-                   {renderSeparator()}
-                </div>
-                {unownedBanksList.map(renderBankItem)}
-              </>
-            )}
+            {activeBanks.map(renderBankItem)}
+            <div className="col-span-1 md:col-span-2">
+                {renderSeparator()}
+            </div>
+            {inactiveBanks.map(renderBankItem)}
           </div>
         ) : (
           <div className="bg-white dark:bg-slate-900 rounded-3xl overflow-hidden shadow-xl shadow-slate-200/50 dark:shadow-none border border-slate-100 dark:border-slate-800">
@@ -544,23 +563,17 @@ const App: React.FC = () => {
               <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="bg-slate-50 dark:bg-slate-800/50 text-slate-400 dark:text-slate-500 text-[9px] font-black uppercase tracking-[0.2em]">
-                    <th className="px-5 py-3 min-w-[160px]">銀行名稱 & 代碼</th>
-                    <th className="px-5 py-3 text-right">預期利率</th>
-                    <th className="px-5 py-3 text-right">建議存入</th>
-                    <th className="px-5 py-3 text-right">上限</th>
-                    <th className="px-3 py-3 w-10"></th>
+                    <th className="px-5 py-4 min-w-[160px]">銀行名稱</th>
+                    <th className="px-5 py-4 text-right">利率</th>
+                    <th className="px-5 py-4 text-right">建議存入</th>
+                    <th className="px-5 py-4 text-right">狀態 & 上限</th>
+                    <th className="px-3 py-4 w-10"></th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-50 dark:divide-slate-800">
-                  {includeNewAccounts ? (
-                    sortedBanks.map(renderBankItem)
-                  ) : (
-                    <>
-                      {ownedBanksList.map(renderBankItem)}
-                      {renderSeparator()}
-                      {unownedBanksList.map(renderBankItem)}
-                    </>
-                  )}
+                  {activeBanks.map(renderBankItem)}
+                  {renderSeparator()}
+                  {inactiveBanks.map(renderBankItem)}
                 </tbody>
               </table>
             </div>
@@ -578,7 +591,7 @@ const App: React.FC = () => {
                   <UserCheck className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
                   我有哪些帳戶？
                 </h2>
-                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 font-medium">勾選您已擁有的銀行，系統將自動套用「舊戶利率」。</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 font-medium">勾選您已持有的帳戶，系統將自動套用「舊戶利率」。</p>
               </div>
               <button onClick={closeSettings} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-all text-slate-400 hover:text-indigo-600 active:scale-90">
                 <X className="w-5 h-5" />
@@ -590,16 +603,16 @@ const App: React.FC = () => {
                 {uniqueBanksForSettings.map((bank) => (
                   <button
                     key={bank.code}
-                    onClick={() => toggleBankByCode(bank.code)}
+                    onClick={() => toggleBankOwnedByCode(bank.code)}
                     className={`flex items-center justify-between w-full px-4 py-3 rounded-xl border-2 transition-all duration-300 group ${
                       ownedBankCodes.has(bank.code)
-                        ? 'bg-indigo-50 dark:bg-indigo-900/20 border-indigo-200 dark:border-indigo-800 text-indigo-800 dark:text-indigo-200 shadow-sm'
-                        : 'bg-white dark:bg-slate-800/50 border-slate-100 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:border-indigo-100 dark:hover:border-indigo-900'
+                        ? 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-200 shadow-sm'
+                        : 'bg-white dark:bg-slate-800/50 border-slate-100 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:border-emerald-100 dark:hover:border-emerald-900'
                     }`}
                   >
                     <span className="flex items-center gap-3">
                       <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all ${
-                        ownedBankCodes.has(bank.code) ? 'bg-indigo-600 border-indigo-600 scale-105' : 'border-slate-200 dark:border-slate-700'
+                        ownedBankCodes.has(bank.code) ? 'bg-emerald-600 border-emerald-600 scale-105' : 'border-slate-200 dark:border-slate-700'
                       }`}>
                         {ownedBankCodes.has(bank.code) && <Check className="w-3.5 h-3.5 text-white font-black" />}
                       </div>
@@ -613,11 +626,11 @@ const App: React.FC = () => {
 
             <div className="p-6 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/80 dark:bg-slate-900/80 backdrop-blur-md">
               <div className="flex flex-col">
-                <span className="text-[10px] text-slate-400 dark:text-slate-500 font-black uppercase tracking-widest">已選擇</span>
-                <span className="text-base font-black text-indigo-600 dark:text-indigo-400">{ownedBankCodes.size} <span className="text-xs">間</span></span>
+                <span className="text-[10px] text-slate-400 dark:text-slate-500 font-black uppercase tracking-widest">已持有</span>
+                <span className="text-base font-black text-emerald-600 dark:text-emerald-400">{ownedBankCodes.size} <span className="text-xs">間</span></span>
               </div>
               <div className="flex gap-3">
-                <button onClick={() => setOwnedBankCodes(new Set())} className="px-3 py-2 text-slate-400 hover:text-red-500 text-xs font-black transition-colors uppercase tracking-widest">清空</button>
+                <button onClick={() => { setOwnedBankCodes(new Set()); setConsideringBankCodes(new Set()); }} className="px-3 py-2 text-slate-400 hover:text-red-500 text-xs font-black transition-colors uppercase tracking-widest">重設</button>
                 <button onClick={closeSettings} className="px-8 py-3 bg-indigo-600 dark:bg-indigo-500 text-white rounded-xl font-black text-xs hover:scale-105 active:scale-95 transition-all shadow-xl shadow-indigo-500/30">確認</button>
               </div>
             </div>
@@ -635,7 +648,7 @@ const App: React.FC = () => {
         </div>
         <p className="font-black tracking-[0.2em] opacity-40 uppercase">© 2026 Taiwan High Interest Tracker</p>
         <p className="opacity-50 max-w-md mx-auto leading-relaxed font-medium italic">
-          Disclaimer: 本工具僅為試算，不保證數據準確。請以各銀行即時公告為準。
+          Disclaimer: 本工具僅為試算。具體利率與條件以各銀行最新官方公告為準。
         </p>
       </footer>
     </div>
