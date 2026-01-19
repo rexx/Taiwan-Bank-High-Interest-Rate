@@ -1,0 +1,21 @@
+{
+  "name": "台灣銀行高利活存利率比較",
+  "short_name": "高利活存",
+  "description": "個人化台灣銀行高利活存配置建議工具",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#4f46e5",
+  "icons": [
+    {
+      "src": "/public/Taiwan-Bank-High-Interest-Rate/favicon-32x32.png",
+      "sizes": "32x32",
+      "type": "image/png"
+    },
+    {
+      "src": "/public/Taiwan-Bank-High-Interest-Rate/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    }
+  ]
+}

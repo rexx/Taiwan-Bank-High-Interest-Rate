@@ -1,8 +1,7 @@
-
 import React, { useState, useMemo, useEffect } from 'react';
 import { BANKS } from './data/banks';
 import { BankData, BankRateInfo } from './types';
-import { Check, Info, Wallet, UserCheck, ExternalLink, X, Calculator, TrendingUp, Moon, Sun, UserPlus, ShieldCheck, Ban, LayoutGrid, List, ChevronDown, ChevronUp, CheckCircle2, PlusCircle, Coins, Heart, HeartOff } from 'lucide-react';
+import { Check, Info, Wallet, UserCheck, ExternalLink, X, Calculator, TrendingUp, Moon, Sun, UserPlus, ShieldCheck, Ban, LayoutGrid, List, ChevronDown, ChevronUp, CheckCircle2, PlusCircle, Coins, Heart, HeartOff, CheckCircle } from 'lucide-react';
 
 const OWNED_KEY = 'taiwan-bank-owned-ids-v2';
 const CONSIDERING_KEY = 'taiwan-bank-considering-ids-v2';
@@ -195,7 +194,7 @@ const App: React.FC = () => {
     const getStatusLabel = () => {
       if (isOwned) return '已持有 (舊戶)';
       if (isConsidering) return '考慮申辦 (新戶)';
-      return '未申辦';
+      return '未持有 (新戶)';
     };
 
     const getStatusColors = () => {
@@ -221,19 +220,33 @@ const App: React.FC = () => {
                 </span>
                 <span className="text-slate-400 dark:text-slate-500 text-[10px] font-mono font-bold px-2">#{bank.code}</span>
               </div>
-              {!isOwned && (
+              <div className="flex items-center gap-2">
                 <button 
-                  onClick={(e) => { e.stopPropagation(); toggleBankConsideringByCode(bank.code); }}
+                  onClick={(e) => { e.stopPropagation(); toggleBankOwnedByCode(bank.code); }}
                   className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black transition-all ${
-                    isConsidering 
-                      ? 'bg-rose-500 text-white shadow-md shadow-rose-500/20' 
-                      : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:bg-rose-50 dark:hover:bg-rose-900/20 hover:text-rose-600'
+                    isOwned 
+                      ? 'bg-emerald-500 text-white shadow-md shadow-emerald-500/20' 
+                      : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 hover:text-emerald-600'
                   }`}
+                  title={isOwned ? "取消標記已持有" : "標記為已持有"}
                 >
-                  {isConsidering ? <HeartOff className="w-3 h-3" /> : <Heart className="w-3 h-3" />}
-                  {isConsidering ? '取消考慮' : '考慮申辦'}
+                  <CheckCircle className="w-3 h-3" />
+                  {isOwned ? '已持有' : '我有帳戶'}
                 </button>
-              )}
+                {!isOwned && (
+                  <button 
+                    onClick={(e) => { e.stopPropagation(); toggleBankConsideringByCode(bank.code); }}
+                    className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black transition-all ${
+                      isConsidering 
+                        ? 'bg-rose-500 text-white shadow-md shadow-rose-500/20' 
+                        : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:bg-rose-50 dark:hover:bg-rose-900/20 hover:text-rose-600'
+                    }`}
+                  >
+                    {isConsidering ? <HeartOff className="w-3 h-3" /> : <Heart className="w-3 h-3" />}
+                    {isConsidering ? '取消考慮' : '考慮申辦'}
+                  </button>
+                )}
+              </div>
             </div>
 
             {/* Title */}
@@ -263,7 +276,7 @@ const App: React.FC = () => {
                 isOwned ? 'text-emerald-500 dark:text-emerald-400' : (isConsidering ? 'text-indigo-500 dark:text-indigo-400' : 'text-slate-300 dark:text-slate-700')
               }`}>{data.display}</div>
               <span className="text-[10px] text-slate-400 dark:text-slate-500 font-black uppercase mt-2 block tracking-widest">
-                {isOwned ? '舊戶專屬利率' : '新戶開戶利率'}
+                {isOwned ? '目前適用：舊戶利率' : '目前適用：新戶利率'}
               </span>
             </div>
 
@@ -339,6 +352,13 @@ const App: React.FC = () => {
           </td>
           <td className="px-5 py-4 text-right">
              <div className="flex items-center justify-end gap-2">
+                <button 
+                  onClick={(e) => { e.stopPropagation(); toggleBankOwnedByCode(bank.code); }}
+                  className={`p-1.5 rounded-lg transition-all ${isOwned ? 'bg-emerald-500 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-400 hover:text-emerald-500'}`}
+                  title="切換持有狀態"
+                >
+                  <CheckCircle className="w-3.5 h-3.5" />
+                </button>
                 {!isOwned && (
                   <button 
                     onClick={(e) => { e.stopPropagation(); toggleBankConsideringByCode(bank.code); }}
@@ -411,7 +431,7 @@ const App: React.FC = () => {
         </p>
         <p className="text-[11px] text-amber-600/70 dark:text-amber-500/60 font-bold flex items-center justify-center gap-1">
           <PlusCircle className="w-3.5 h-3.5" />
-          現有高利額度已滿，可點擊「考慮申辦」來擴充額度
+          現有高利額度已滿，可點擊「我有帳戶」或「考慮申辦」來調整額度
         </p>
       </div>
     ) : (
@@ -423,7 +443,7 @@ const App: React.FC = () => {
             </span>
             <span className="text-[10px] text-amber-600/70 dark:text-amber-500/60 font-bold flex items-center gap-1 mt-0.5">
               <PlusCircle className="w-3 h-3" />
-              現有高利額度已滿，可點擊下方愛心考慮申辦
+              現有高利額度已滿，可點擊表格中按鈕切換狀態
             </span>
           </div>
         </td>
