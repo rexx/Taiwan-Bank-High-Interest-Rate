@@ -596,7 +596,7 @@ const App: React.FC = () => {
                 <thead>
                   <tr className="bg-slate-50 dark:bg-slate-800/50 text-slate-400 dark:text-slate-500 text-[9px] font-black uppercase tracking-[0.2em]">
                     <th className="px-2 py-3 w-[100px]">持有狀態</th>
-                    <th className="px-2 py-3 min-w-[140px]">銀行名稱</th>
+                    <th className="px-2 py-3 min-w-[40px]">銀行名稱</th>
                     <th className="px-2 py-3 text-right">利率</th>
                     <th className="px-2 py-3 text-right">建議存入 / 上限</th>
                     <th className="px-2 py-3 w-10"></th>
