@@ -327,7 +327,7 @@ const App: React.FC = () => {
             isSelectedForDeposit ? 'bg-indigo-50/10 dark:bg-indigo-500/5' : ''
           }`}
         >
-          <td className="px-3 py-4">
+          <td className="px-2 py-3">
              <div className="flex items-center gap-1">
                 <button 
                   onClick={(e) => { e.stopPropagation(); toggleBankOwnedByCode(bank.code); }}
@@ -347,17 +347,17 @@ const App: React.FC = () => {
                 )}
              </div>
           </td>
-          <td className="px-3 py-4">
+          <td className="px-2 py-3">
             <div className="flex items-center truncate">
               <span className={`text-xs truncate font-black ${isOwned || isConsidering ? 'text-slate-800 dark:text-slate-100' : 'text-slate-400 dark:text-slate-600'}`}>{bank.name}</span>
             </div>
           </td>
-          <td className={`px-3 py-4 text-right font-black text-xs whitespace-nowrap ${
+          <td className={`px-2 py-3 text-right font-black text-xs whitespace-nowrap ${
             isOwned ? 'text-emerald-600 dark:text-emerald-400' : (isConsidering ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-400 dark:text-slate-700')
           }`}>
             {data.display}
           </td>
-          <td className="px-3 py-4 text-right whitespace-nowrap">
+          <td className="px-2 py-3 text-right whitespace-nowrap">
             <div className="flex flex-col items-end gap-1.5">
               <div className="flex items-center gap-1.5">
                 {isSelectedForDeposit ? (
@@ -378,13 +378,13 @@ const App: React.FC = () => {
               )}
             </div>
           </td>
-          <td className="px-2 py-4 text-right">
+          <td className="px-2 py-3 text-right">
             {isExpanded ? <ChevronUp className="w-4 h-4 text-slate-300 ml-auto" /> : <ChevronDown className="w-4 h-4 text-slate-300 ml-auto" />}
           </td>
         </tr>
         {isExpanded && (
           <tr className="bg-slate-50/50 dark:bg-slate-950/40">
-            <td colSpan={5} className="px-3 py-4">
+            <td colSpan={5} className="px-2 py-3">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-3">
                   <div className="flex items-center flex-wrap gap-x-4 gap-y-2 text-[10px] font-black uppercase tracking-wider text-slate-400">
@@ -595,11 +595,11 @@ const App: React.FC = () => {
               <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="bg-slate-50 dark:bg-slate-800/50 text-slate-400 dark:text-slate-500 text-[9px] font-black uppercase tracking-[0.2em]">
-                    <th className="px-3 py-4 w-[100px]">持有狀態</th>
-                    <th className="px-3 py-4 min-w-[140px]">銀行名稱</th>
-                    <th className="px-3 py-4 text-right">利率</th>
-                    <th className="px-3 py-4 text-right">建議存入 / 上限</th>
-                    <th className="px-2 py-4 w-10"></th>
+                    <th className="px-2 py-3 w-[100px]">持有狀態</th>
+                    <th className="px-2 py-3 min-w-[140px]">銀行名稱</th>
+                    <th className="px-2 py-3 text-right">利率</th>
+                    <th className="px-2 py-3 text-right">建議存入 / 上限</th>
+                    <th className="px-2 py-3 w-10"></th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-50 dark:divide-slate-800">
