@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo, useEffect } from 'react';
 import { BANKS } from './data/banks';
 import { BankData, BankRateInfo } from './types';
@@ -8,6 +9,7 @@ const CONSIDERING_KEY = 'taiwan-bank-considering-ids-v2';
 const SETUP_COMPLETED_KEY = 'taiwan-bank-setup-completed';
 const THEME_KEY = 'taiwan-bank-theme';
 const VIEW_MODE_KEY = 'taiwan-bank-view-mode';
+const TOTAL_CASH_KEY = 'taiwan-bank-total-cash';
 
 const DEFAULT_BANK_CODES = ['812', '017', '807', '048', '004']; // 台新, 兆豐, 永豐, 王道, 台銀
 const DEFAULT_CASH = 1000000;
@@ -49,7 +51,14 @@ const App: React.FC = () => {
 
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const [totalCash, setTotalCash] = useState<number>(DEFAULT_CASH);
+  const [totalCash, setTotalCash] = useState<number>(() => {
+    const saved = localStorage.getItem(TOTAL_CASH_KEY);
+    if (saved) {
+      const val = Number(saved);
+      return isNaN(val) ? DEFAULT_CASH : val;
+    }
+    return DEFAULT_CASH;
+  });
 
   useEffect(() => {
     localStorage.setItem(OWNED_KEY, JSON.stringify(Array.from(ownedBankCodes)));
@@ -62,6 +71,10 @@ const App: React.FC = () => {
   useEffect(() => {
     localStorage.setItem(VIEW_MODE_KEY, viewMode);
   }, [viewMode]);
+
+  useEffect(() => {
+    localStorage.setItem(TOTAL_CASH_KEY, totalCash.toString());
+  }, [totalCash]);
 
   useEffect(() => {
     if (isDarkMode) {
