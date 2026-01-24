@@ -211,7 +211,6 @@ const App: React.FC = () => {
     const getStatusColors = () => {
       if (isOwned) return { bg: 'bg-emerald-500/20', text: 'text-emerald-600 dark:text-emerald-400', border: 'border-emerald-500/30' };
       if (isConsidering) return { bg: 'bg-indigo-500/20', text: 'text-indigo-600 dark:text-indigo-400', border: 'border-indigo-500/30' };
-      // Not owned banks should also look clear, using a neutral but non-dimmed style
       return { bg: 'bg-slate-500/10', text: 'text-slate-600 dark:text-slate-400', border: 'border-slate-300 dark:border-slate-800' };
     };
 
@@ -365,7 +364,6 @@ const App: React.FC = () => {
                 <span className="text-slate-300 dark:text-slate-700 text-[10px]">/</span>
                 <span className="text-[10px] font-black text-slate-600 dark:text-slate-400">{data.quota}</span>
               </div>
-              {/* Compact Mode Progress Bar */}
               {data.numericQuota !== Infinity && (
                 <div className="w-16 h-1 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
                   <div 
@@ -384,7 +382,6 @@ const App: React.FC = () => {
           <tr className="bg-slate-50/50 dark:bg-slate-950/40">
             <td colSpan={5} className="px-4 py-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                {/* Left Side: Metadata and Notes */}
                 <div className="space-y-4">
                   <div className="flex items-center flex-wrap gap-x-4 gap-y-2 text-[10px] font-black uppercase tracking-wider text-slate-400">
                     <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 px-2.5 py-1.5 rounded-lg">
@@ -409,7 +406,6 @@ const App: React.FC = () => {
                   )}
                 </div>
 
-                {/* Right Side: Usage Ratio Aligned Right */}
                 <div className="flex flex-col items-end justify-center space-y-3">
                   {data.numericQuota !== Infinity && (
                     <div className="w-full max-w-[200px] space-y-2">
@@ -598,8 +594,7 @@ const App: React.FC = () => {
                     <th className="px-2 py-3 w-[100px]">持有狀態</th>
                     <th className="px-2 py-3 min-w-[40px]">銀行名稱</th>
                     <th className="px-2 py-3 text-right">利率</th>
-                    <th className="px-2 py-3 text-right">建議存入 / 上限</th>
-                    <th className="px-2 py-3 w-10"></th>
+                    <th colSpan={2} className="px-2 py-3 text-right">建議存入 / 上限</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-50 dark:divide-slate-800">
