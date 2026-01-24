@@ -435,7 +435,7 @@ const App: React.FC = () => {
         </p>
         <p className="text-[11px] text-amber-600/70 dark:text-amber-500/60 font-bold flex items-center justify-center gap-1">
           <PlusCircle className="w-3.5 h-3.5" />
-          現有高利額度已滿，可點擊「我有帳戶」或「考慮申辦」來調整額度
+          可點擊「我有帳戶」或「考慮申辦」來調整額度
         </p>
       </div>
     ) : (
@@ -445,9 +445,9 @@ const App: React.FC = () => {
             <span className="text-amber-700 dark:text-amber-400 font-black text-sm flex items-center gap-2">
                還有 {formatToWan(allocation.remaining)} 資金溢出
             </span>
-            <span className="text-[10px] text-amber-600/70 dark:text-amber-500/60 font-bold flex items-center gap-1 mt-0.5">
-              <PlusCircle className="w-3 h-3" />
-              現有高利額度已滿，可點擊表格中按鈕切換狀態
+            <span className="text-[10px] text-amber-600/70 dark:text-amber-500/60 font-bold flex items-center gap-1 mt-1.5 leading-relaxed">
+              <PlusCircle className="w-3 h-3 flex-shrink-0" />
+              可點擊 ( <Heart className="w-2.5 h-2.5 inline mx-0.5" /> ) 考慮申辦，或是點擊 ( <CheckCircle className="w-2.5 h-2.5 inline mx-0.5" /> ) 切換為已持有帳戶
             </span>
           </div>
         </td>
