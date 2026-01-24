@@ -1,8 +1,7 @@
-
 import React, { useState, useMemo, useEffect } from 'react';
 import { BANKS } from './data/banks';
 import { BankData, BankRateInfo } from './types';
-import { Check, Info, Wallet, UserCheck, ExternalLink, X, Calculator, TrendingUp, Moon, Sun, UserPlus, ShieldCheck, Ban, LayoutGrid, List, ChevronDown, ChevronUp, CheckCircle2, PlusCircle, Coins, Heart, HeartOff, CheckCircle } from 'lucide-react';
+import { Check, Info, Wallet, UserCheck, ExternalLink, X, Calculator, TrendingUp, Moon, Sun, UserPlus, ShieldCheck, Ban, LayoutGrid, List, ChevronDown, ChevronUp, CheckCircle2, PlusCircle, Coins, Heart, HeartOff, CheckCircle, Hash } from 'lucide-react';
 
 const OWNED_KEY = 'taiwan-bank-owned-ids-v2';
 const CONSIDERING_KEY = 'taiwan-bank-considering-ids-v2';
@@ -328,46 +327,11 @@ const App: React.FC = () => {
             isSelectedForDeposit ? 'bg-indigo-50/10 dark:bg-indigo-500/5' : ''
           }`}
         >
-          <td className="px-5 py-4">
-            <div className="flex items-center gap-2">
-              <span className="text-[9px] text-slate-400 dark:text-slate-500 font-black bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded-md flex-shrink-0">
-                {bank.code}
-              </span>
-              <div className="flex items-center gap-2 truncate">
-                <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${isOwned ? 'bg-emerald-500' : (isConsidering ? 'bg-indigo-500' : 'bg-slate-300 dark:bg-slate-700')}`}></span>
-                <span className={`text-xs truncate font-bold ${isOwned || isConsidering ? 'text-slate-800 dark:text-slate-100' : 'text-slate-400 dark:text-slate-600'}`}>{bank.name}</span>
-              </div>
-            </div>
-          </td>
-          <td className={`px-5 py-4 text-right font-black text-xs whitespace-nowrap ${
-            isOwned ? 'text-emerald-600 dark:text-emerald-400' : (isConsidering ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-400 dark:text-slate-700')
-          }`}>
-            {data.display}
-          </td>
-          <td className="px-5 py-4 text-right whitespace-nowrap">
-            <div className="flex flex-col items-end gap-1.5">
-              {isSelectedForDeposit ? (
-                <>
-                  <span className="text-indigo-600 dark:text-indigo-400 font-black text-xs">{formatCurrency(depositAmount)}</span>
-                  {data.numericQuota !== Infinity && (
-                    <div className="w-16 h-1 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
-                      <div 
-                        className={`h-full transition-all duration-1000 ${isOwned ? 'bg-emerald-500' : 'bg-indigo-500'}`}
-                        style={{ width: `${Math.min(100, (depositAmount / data.numericQuota) * 100)}%` }}
-                      ></div>
-                    </div>
-                  )}
-                </>
-              ) : (
-                <span className="text-[10px] font-black text-slate-300 dark:text-slate-700">$0</span>
-              )}
-            </div>
-          </td>
-          <td className="px-5 py-4 text-right">
-             <div className="flex items-center justify-end gap-2">
+          <td className="px-3 py-4">
+             <div className="flex items-center gap-1">
                 <button 
                   onClick={(e) => { e.stopPropagation(); toggleBankOwnedByCode(bank.code); }}
-                  className={`p-1.5 rounded-lg transition-all ${isOwned ? 'bg-emerald-500 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-400 hover:text-emerald-500'}`}
+                  className={`p-1.5 rounded-lg transition-all ${isOwned ? 'bg-emerald-500 text-white shadow-md shadow-emerald-500/20' : 'bg-slate-100 dark:bg-slate-800 text-slate-400 hover:text-emerald-500'}`}
                   title="切換持有狀態"
                 >
                   <CheckCircle className="w-3.5 h-3.5" />
@@ -375,24 +339,59 @@ const App: React.FC = () => {
                 {!isOwned && (
                   <button 
                     onClick={(e) => { e.stopPropagation(); toggleBankConsideringByCode(bank.code); }}
-                    className={`p-1.5 rounded-lg transition-all ${isConsidering ? 'bg-rose-500 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-400 hover:text-rose-500'}`}
+                    className={`p-1.5 rounded-lg transition-all ${isConsidering ? 'bg-rose-500 text-white shadow-md shadow-rose-500/20' : 'bg-slate-100 dark:bg-slate-800 text-slate-400 hover:text-rose-500'}`}
+                    title="切換考慮狀態"
                   >
                     {isConsidering ? <HeartOff className="w-3.5 h-3.5" /> : <Heart className="w-3.5 h-3.5" />}
                   </button>
                 )}
-                <div className="text-[10px] text-slate-500 dark:text-slate-400 font-black whitespace-nowrap opacity-60 w-16 text-right">{data.quota}</div>
              </div>
           </td>
           <td className="px-3 py-4">
-            {isExpanded ? <ChevronUp className="w-4 h-4 text-slate-300" /> : <ChevronDown className="w-4 h-4 text-slate-300" />}
+            <div className="flex items-center truncate">
+              <span className={`text-xs truncate font-black ${isOwned || isConsidering ? 'text-slate-800 dark:text-slate-100' : 'text-slate-400 dark:text-slate-600'}`}>{bank.name}</span>
+            </div>
+          </td>
+          <td className={`px-3 py-4 text-right font-black text-xs whitespace-nowrap ${
+            isOwned ? 'text-emerald-600 dark:text-emerald-400' : (isConsidering ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-400 dark:text-slate-700')
+          }`}>
+            {data.display}
+          </td>
+          <td className="px-3 py-4 text-right whitespace-nowrap">
+            <div className="flex flex-col items-end gap-1.5">
+              <div className="flex items-center gap-1.5">
+                {isSelectedForDeposit ? (
+                  <span className="text-indigo-600 dark:text-indigo-400 font-black text-xs">{formatCurrency(depositAmount)}</span>
+                ) : (
+                  <span className="text-[10px] font-black text-slate-300 dark:text-slate-700">$0</span>
+                )}
+                <span className="text-slate-300 dark:text-slate-700 text-[10px]">/</span>
+                <span className="text-[10px] font-black text-slate-400 dark:text-slate-500">{data.quota}</span>
+              </div>
+              {isSelectedForDeposit && data.numericQuota !== Infinity && (
+                <div className="w-20 h-1 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                  <div 
+                    className={`h-full transition-all duration-1000 ${isOwned ? 'bg-emerald-500' : 'bg-indigo-500'}`}
+                    style={{ width: `${Math.min(100, (depositAmount / data.numericQuota) * 100)}%` }}
+                  ></div>
+                </div>
+              )}
+            </div>
+          </td>
+          <td className="px-2 py-4 text-right">
+            {isExpanded ? <ChevronUp className="w-4 h-4 text-slate-300 ml-auto" /> : <ChevronDown className="w-4 h-4 text-slate-300 ml-auto" />}
           </td>
         </tr>
         {isExpanded && (
           <tr className="bg-slate-50/50 dark:bg-slate-950/40">
-            <td colSpan={5} className="px-5 py-4">
+            <td colSpan={5} className="px-3 py-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <div className="flex items-center gap-3 text-[10px] font-black uppercase tracking-wider text-slate-400">
+                <div className="space-y-3">
+                  <div className="flex items-center flex-wrap gap-x-4 gap-y-2 text-[10px] font-black uppercase tracking-wider text-slate-400">
+                    <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-md">
+                      <Hash className="w-3 h-3 text-indigo-500" />
+                      <span>代碼：{bank.code}</span>
+                    </div>
                     <div className="flex items-center gap-1">
                       <ShieldCheck className="w-3.5 h-3.5" />
                       <span>{getStatusLabel()}</span>
@@ -403,7 +402,7 @@ const App: React.FC = () => {
                     </div>
                   </div>
                   {data.notes && (
-                    <div className="p-3 bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-800 text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed font-medium">
+                    <div className="p-3 bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-800 text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed font-medium shadow-sm">
                       <Info className="w-3.5 h-3.5 inline-block mr-1.5 text-indigo-300 mb-0.5" />
                       {data.notes}
                     </div>
@@ -479,8 +478,8 @@ const App: React.FC = () => {
               <TrendingUp className="w-5 h-5 md:w-6 md:h-6 text-indigo-100" />
             </div>
             <div>
-              <h1 className="text-lg md:text-xl font-black leading-tight tracking-tight">高利活存攻略</h1>
-              <p className="text-[10px] md:text-xs text-indigo-100/70 font-medium">個人化利息極大化助手</p>
+              <h1 className="text-lg md:text-xl font-black leading-tight tracking-tight">銀行高利活存攻略</h1>
+              <p className="text-[10px] md:text-xs text-indigo-100/70 font-medium">個人化利息最大化助手</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -596,11 +595,11 @@ const App: React.FC = () => {
               <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="bg-slate-50 dark:bg-slate-800/50 text-slate-400 dark:text-slate-500 text-[9px] font-black uppercase tracking-[0.2em]">
-                    <th className="px-5 py-4 min-w-[160px]">銀行名稱</th>
-                    <th className="px-5 py-4 text-right">利率</th>
-                    <th className="px-5 py-4 text-right">建議存入</th>
-                    <th className="px-5 py-4 text-right">狀態 & 上限</th>
-                    <th className="px-3 py-4 w-10"></th>
+                    <th className="px-3 py-4 w-[100px]">持有狀態</th>
+                    <th className="px-3 py-4 min-w-[140px]">銀行名稱</th>
+                    <th className="px-3 py-4 text-right">利率</th>
+                    <th className="px-3 py-4 text-right">建議存入 / 上限</th>
+                    <th className="px-2 py-4 w-10"></th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-50 dark:divide-slate-800">

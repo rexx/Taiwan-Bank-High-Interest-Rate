@@ -1,4 +1,3 @@
-
 import { BankData } from '../types';
 
 export const BANKS: BankData[] = [
@@ -16,11 +15,11 @@ export const BANKS: BankData[] = [
     },
     oldCustomer: {
       rate: 4.0,
-      display: '1.5% 或 4%',
+      display: '4.000%',
       quota: '30萬',
       numericQuota: 300000,
       transfers: '10轉/10提',
-      notes: '解完任務才有 4%'
+      notes: '解任務最高 4% (基本 1.5% + 加碼 2.5%)'
     }
   },
   {
@@ -113,19 +112,19 @@ export const BANKS: BankData[] = [
     code: '050',
     newCustomer: {
       rate: 3.0,
-      display: '2.1%~3.0%',
+      display: '3.000%',
       quota: '15萬',
       numericQuota: 150000,
       transfers: '20轉/12提',
-      notes: '解任務最高加碼 0.9%'
+      notes: '解任務最高加碼至 3.0% (基本 2.1% + 任務任務最高 0.9%)'
     },
     oldCustomer: {
       rate: 2.8,
-      display: '1.9%~2.8%',
+      display: '2.800%',
       quota: '15萬',
       numericQuota: 150000,
       transfers: '20轉/12提',
-      notes: '解任務最高加碼 0.9%'
+      notes: '解任務最高加碼至 2.8% (基本 1.9% + 任務最高 0.9%)'
     }
   },
   {
@@ -134,19 +133,19 @@ export const BANKS: BankData[] = [
     code: '108',
     newCustomer: {
       rate: 3.15,
-      display: '1.65%~3.15%',
+      display: '3.150%',
       quota: '10萬',
       numericQuota: 100000,
       transfers: '5轉/5提',
-      notes: '解任務最高 3.15%'
+      notes: '解任務最高至 3.15% (基本 1.65% ~ 最高 3.15%)'
     },
     oldCustomer: {
       rate: 2.15,
-      display: '0.65%~2.15%',
+      display: '2.150%',
       quota: '10~30萬',
       numericQuota: 300000,
       transfers: '5轉/5提',
-      notes: '解任務最高 2.15%'
+      notes: '解任務最高至 2.15% (基本 0.65% ~ 最高 2.15%)'
     }
   },
   {
@@ -267,12 +266,12 @@ export const BANKS: BankData[] = [
       notes: '基本牌告'
     },
     oldCustomer: {
-      rate: 1.56875,
-      display: '1.56875%',
+      rate: 1.8,
+      display: '1.800%',
       quota: '20萬',
       numericQuota: 200000,
       transfers: '50轉/5提',
-      notes: '需解任務，5~20萬 1.8%'
+      notes: '解任務 5~20萬最高享 1.8%'
     }
   },
   {
@@ -435,12 +434,12 @@ export const BANKS: BankData[] = [
       notes: '共計 2 個月'
     },
     oldCustomer: {
-      rate: 1.4275,
-      display: '0.9%~1.64%',
+      rate: 1.64,
+      display: '1.640%',
       quota: '10萬',
       numericQuota: 100000,
       transfers: '30轉/30提',
-      notes: '大柴任務最高 1.64%'
+      notes: '大柴任務最高 1.64% (0.9% ~ 1.64%)'
     }
   }
 ];
