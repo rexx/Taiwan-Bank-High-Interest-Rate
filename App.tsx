@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo, useEffect } from 'react';
 import { BANKS } from './data/banks';
 import { BankData, BankRateInfo } from './types';
@@ -105,15 +106,14 @@ const App: React.FC = () => {
       newOwned.delete(code);
     } else {
       newOwned.add(code);
-      newConsidering.delete(code); // If owned, cannot be 'considering'
+      newConsidering.delete(code);
     }
     setOwnedBankCodes(newOwned);
     setConsideringBankCodes(newConsidering);
   };
 
   const toggleBankConsideringByCode = (code: string) => {
-    if (ownedBankCodes.has(code)) return; // Cannot consider if already owned
-
+    if (ownedBankCodes.has(code)) return;
     const newConsidering = new Set(consideringBankCodes);
     if (newConsidering.has(code)) {
       newConsidering.delete(code);
@@ -132,7 +132,6 @@ const App: React.FC = () => {
 
   const toggleTheme = () => setIsDarkMode(prev => !prev);
 
-  // Core Sorting Logic
   const sortedBanks = useMemo(() => {
     return [...BANKS].sort((a, b) => {
       const aOwned = ownedBankCodes.has(a.code);
@@ -143,10 +142,8 @@ const App: React.FC = () => {
       const aPriority = aOwned || aConsidering ? 1 : 0;
       const bPriority = bOwned || bConsidering ? 1 : 0;
 
-      // Group High Priority (Owned/Considering) at the top
       if (aPriority !== bPriority) return bPriority - aPriority;
 
-      // Same group: Sort by current effective rate
       const aRate = aOwned ? a.oldCustomer.rate : a.newCustomer.rate;
       const bRate = bOwned ? b.oldCustomer.rate : b.newCustomer.rate;
       return bRate - aRate;
@@ -163,12 +160,7 @@ const App: React.FC = () => {
       const isConsidering = consideringBankCodes.has(bank.code);
       const isActive = isOwned || isConsidering;
       
-      if (!isActive) {
-        result[bank.id] = 0;
-        continue;
-      }
-
-      if (remaining <= 0) {
+      if (!isActive || remaining <= 0) {
         result[bank.id] = 0;
         continue;
       }
@@ -194,6 +186,13 @@ const App: React.FC = () => {
 
   const formatCurrency = (val: number) => {
     return new Intl.NumberFormat('zh-TW', { style: 'currency', currency: 'TWD', maximumFractionDigits: 0 }).format(val);
+  };
+
+  const formatToWan = (val: number) => {
+    if (val === 0) return '$0';
+    const wan = val / 10000;
+    // 如果有小數點（如 1.5 萬），保留一位小數，否則顯示整數
+    return `${Number.isInteger(wan) ? wan : wan.toFixed(1)} 萬`;
   };
 
   const renderBankItem = (bank: BankData) => {
@@ -224,7 +223,6 @@ const App: React.FC = () => {
           className={`group relative overflow-hidden bg-white dark:bg-[#0f172a] rounded-[2rem] p-6 shadow-sm border-2 transition-all duration-500 hover:shadow-2xl hover:-translate-y-1 ${colors.border} ${isSelectedForDeposit ? 'border-solid shadow-lg shadow-indigo-500/5' : 'border-dashed'}`}
         >
           <div className="space-y-5">
-            {/* Top Badges */}
             <div className="flex items-center justify-between">
               <div className="flex items-center flex-wrap gap-2">
                 <span className={`text-[10px] px-3 py-1 rounded-full font-black tracking-wider shadow-sm ${colors.bg} ${colors.text}`}>
@@ -240,7 +238,6 @@ const App: React.FC = () => {
                       ? 'bg-emerald-500 text-white shadow-md shadow-emerald-500/20' 
                       : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 hover:text-emerald-600'
                   }`}
-                  title={isOwned ? "取消標記已持有" : "標記為已持有"}
                 >
                   <CheckCircle className="w-3 h-3" />
                   {isOwned ? '已持有' : '我有帳戶'}
@@ -261,19 +258,17 @@ const App: React.FC = () => {
               </div>
             </div>
 
-            {/* Title */}
             <h3 className="text-xl md:text-2xl font-black text-slate-800 dark:text-slate-100 tracking-tight">{bank.name}</h3>
 
-            {/* Main Stats Grid */}
             <div className="grid grid-cols-3 gap-2">
               <div className="flex flex-col">
-                <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1">單筆上限</span>
+                <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1">額度上限</span>
                 <span className="text-sm font-black text-slate-700 dark:text-slate-300">{data.quota}</span>
               </div>
               <div className="flex flex-col">
                 <span className={`text-[10px] font-bold uppercase tracking-widest mb-1 ${isSelectedForDeposit ? 'text-indigo-500 dark:text-indigo-400' : 'text-slate-400'}`}>建議存入</span>
-                <span className={`text-sm font-black ${isSelectedForDeposit ? 'text-indigo-600 dark:text-indigo-300' : 'text-slate-400 dark:text-slate-500'}`}>
-                  {isSelectedForDeposit ? formatCurrency(depositAmount) : '$0'}
+                <span className={`text-base font-black ${isSelectedForDeposit ? 'text-indigo-600 dark:text-indigo-300' : 'text-slate-400 dark:text-slate-500'}`}>
+                  {formatToWan(depositAmount)}
                 </span>
               </div>
               <div className="flex flex-col">
@@ -282,7 +277,6 @@ const App: React.FC = () => {
               </div>
             </div>
 
-            {/* Rate Section */}
             <div className="pt-2">
               <div className={`text-4xl md:text-5xl font-black tracking-tighter transition-colors leading-none ${
                 isOwned ? 'text-emerald-500 dark:text-emerald-400' : (isConsidering ? 'text-indigo-500 dark:text-indigo-400' : 'text-slate-300 dark:text-slate-700')
@@ -294,7 +288,6 @@ const App: React.FC = () => {
 
             <div className="h-px bg-slate-100 dark:bg-slate-800/50 w-full"></div>
 
-            {/* Notes Section */}
             {data.notes && (
               <div className="text-[11px] text-slate-500 dark:text-slate-400 flex gap-2 items-start leading-relaxed font-medium min-h-[2.5rem]">
                 <Info className="w-4 h-4 flex-shrink-0 text-slate-300 dark:text-slate-600" />
@@ -302,7 +295,6 @@ const App: React.FC = () => {
               </div>
             )}
 
-            {/* Internal Progress Bar */}
             {isSelectedForDeposit && data.numericQuota !== Infinity && (
               <div className="pt-2">
                 <div className="w-full h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
@@ -332,7 +324,6 @@ const App: React.FC = () => {
                 <button 
                   onClick={(e) => { e.stopPropagation(); toggleBankOwnedByCode(bank.code); }}
                   className={`p-1.5 rounded-lg transition-all ${isOwned ? 'bg-emerald-500 text-white shadow-md shadow-emerald-500/20' : 'bg-slate-100 dark:bg-slate-800 text-slate-400 hover:text-emerald-500'}`}
-                  title="切換持有狀態"
                 >
                   <CheckCircle className="w-3.5 h-3.5" />
                 </button>
@@ -340,7 +331,6 @@ const App: React.FC = () => {
                   <button 
                     onClick={(e) => { e.stopPropagation(); toggleBankConsideringByCode(bank.code); }}
                     className={`p-1.5 rounded-lg transition-all ${isConsidering ? 'bg-rose-500 text-white shadow-md shadow-rose-500/20' : 'bg-slate-100 dark:bg-slate-800 text-slate-400 hover:text-rose-500'}`}
-                    title="切換考慮狀態"
                   >
                     {isConsidering ? <HeartOff className="w-3.5 h-3.5" /> : <Heart className="w-3.5 h-3.5" />}
                   </button>
@@ -358,24 +348,16 @@ const App: React.FC = () => {
             {data.display}
           </td>
           <td className="px-2 py-3 text-right whitespace-nowrap">
-            <div className="flex flex-col items-end gap-1.5">
+            <div className="flex flex-col items-end gap-1">
               <div className="flex items-center gap-1.5">
                 {isSelectedForDeposit ? (
-                  <span className="text-indigo-600 dark:text-indigo-400 font-black text-xs">{formatCurrency(depositAmount)}</span>
+                  <span className="text-indigo-600 dark:text-indigo-400 font-black text-xs">{formatToWan(depositAmount)}</span>
                 ) : (
                   <span className="text-[10px] font-black text-slate-300 dark:text-slate-700">$0</span>
                 )}
                 <span className="text-slate-300 dark:text-slate-700 text-[10px]">/</span>
                 <span className="text-[10px] font-black text-slate-400 dark:text-slate-500">{data.quota}</span>
               </div>
-              {isSelectedForDeposit && data.numericQuota !== Infinity && (
-                <div className="w-20 h-1 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
-                  <div 
-                    className={`h-full transition-all duration-1000 ${isOwned ? 'bg-emerald-500' : 'bg-indigo-500'}`}
-                    style={{ width: `${Math.min(100, (depositAmount / data.numericQuota) * 100)}%` }}
-                  ></div>
-                </div>
-              )}
             </div>
           </td>
           <td className="px-2 py-3 text-right">
@@ -408,22 +390,6 @@ const App: React.FC = () => {
                     </div>
                   )}
                 </div>
-                <div className="flex items-center justify-end">
-                  {isSelectedForDeposit && data.numericQuota !== Infinity && (
-                    <div className="w-full max-w-[160px] space-y-1.5">
-                      <div className="flex justify-between text-[9px] font-black uppercase text-slate-400 tracking-widest">
-                        <span>額度使用率</span>
-                        <span>{Math.round((depositAmount / data.numericQuota) * 100)}%</span>
-                      </div>
-                      <div className="h-1 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
-                        <div 
-                          className={`h-full transition-all duration-1000 ${isOwned ? 'bg-emerald-500' : 'bg-indigo-500'}`}
-                          style={{ width: `${(depositAmount / data.numericQuota) * 100}%` }}
-                        ></div>
-                      </div>
-                    </div>
-                  )}
-                </div>
               </div>
             </td>
           </tr>
@@ -439,7 +405,7 @@ const App: React.FC = () => {
       <div key="separator" className="py-6 px-4 bg-amber-50/50 dark:bg-amber-900/10 border-2 border-dashed border-amber-200 dark:border-amber-800/50 rounded-3xl text-center space-y-1 my-4">
         <p className="text-amber-700 dark:text-amber-400 font-black flex items-center justify-center gap-2 text-base">
           <Calculator className="w-5 h-5" />
-          還有 {formatCurrency(allocation.remaining)} 資金溢出
+          還有 {formatToWan(allocation.remaining)} 資金溢出
         </p>
         <p className="text-[11px] text-amber-600/70 dark:text-amber-500/60 font-bold flex items-center justify-center gap-1">
           <PlusCircle className="w-3.5 h-3.5" />
@@ -451,7 +417,7 @@ const App: React.FC = () => {
         <td colSpan={5} className="px-5 py-6 text-center">
           <div className="inline-flex flex-col items-center">
             <span className="text-amber-700 dark:text-amber-400 font-black text-sm flex items-center gap-2">
-               還有 {formatCurrency(allocation.remaining)} 資金溢出
+               還有 {formatToWan(allocation.remaining)} 資金溢出
             </span>
             <span className="text-[10px] text-amber-600/70 dark:text-amber-500/60 font-bold flex items-center gap-1 mt-0.5">
               <PlusCircle className="w-3 h-3" />
@@ -498,7 +464,6 @@ const App: React.FC = () => {
       </header>
 
       <main className="max-w-4xl mx-auto px-4 py-6">
-        {/* Statistics Dashboard */}
         <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] p-6 shadow-xl shadow-slate-200/50 dark:shadow-none border border-slate-100 dark:border-slate-800 mb-6 space-y-6 transition-all">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
             <div className="flex-1">
@@ -520,14 +485,12 @@ const App: React.FC = () => {
             </div>
           </div>
 
-          {/* 整合式利息概覽面板 */}
           <div className="bg-rose-50/40 dark:bg-rose-950/20 p-4 md:p-6 rounded-[2rem] border-2 border-rose-100/50 dark:border-rose-900/30 relative overflow-hidden group transition-all">
             <div className="absolute top-[-30px] right-[-30px] opacity-[0.03] group-hover:opacity-[0.06] transition-opacity">
               <Coins className="w-32 h-32 text-rose-500" />
             </div>
             
             <div className="flex flex-row items-center relative z-10 w-full">
-              {/* 左側：主月利息 (50%) */}
               <div className="w-1/2 min-w-0 pr-2">
                 <div className="flex items-center gap-1 text-rose-600 dark:text-rose-400 font-black text-[10px] md:text-xs tracking-widest uppercase mb-0.5 whitespace-nowrap overflow-hidden">
                   <Coins className="w-3 h-3 flex-shrink-0" />
@@ -538,7 +501,6 @@ const App: React.FC = () => {
                 </div>
               </div>
 
-              {/* 右側：補充資訊 (50%) */}
               <div className="w-1/2 min-w-0 flex flex-col gap-1.5 pl-2">
                 <div className="flex flex-row items-center justify-between gap-1 px-2 py-1.5 md:px-3 md:py-2 bg-transparent rounded-xl md:rounded-2xl border-2 border-slate-300/40 dark:border-slate-700/40 w-full min-w-0">
                   <span className="text-[9px] md:text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider whitespace-nowrap flex-shrink-0">預估年利息</span>
@@ -548,7 +510,7 @@ const App: React.FC = () => {
                 </div>
                 
                 <div className="flex flex-row items-center justify-between gap-1 px-2 py-1.5 md:px-3 md:py-2 bg-transparent rounded-xl md:rounded-2xl border-2 border-slate-300/40 dark:border-slate-700/40 w-full min-w-0">
-                  <span className="text-[9px] md:text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider whitespace-nowrap flex-shrink-0">資產年化</span>
+                  <span className="text-[9px] md:text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider whitespace-nowrap flex-shrink-0">平均年利率</span>
                   <span className="text-xs md:text-base font-black text-slate-600 dark:text-slate-300 whitespace-nowrap truncate text-right flex-1">
                     {totalCash > 0 ? ((allocation.totalInterest / totalCash) * 100).toFixed(3) : '0.000'}%
                   </span>
