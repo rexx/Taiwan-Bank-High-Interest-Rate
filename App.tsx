@@ -296,11 +296,17 @@ const App: React.FC = () => {
             )}
 
             {isSelectedForDeposit && data.numericQuota !== Infinity && (
-              <div className="pt-2">
+              <div className="pt-2 space-y-1.5">
+                <div className="flex items-center justify-between px-0.5">
+                  <span className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">額度使用率</span>
+                  <span className={`text-[10px] font-black ${usageRatio > 0 ? 'text-indigo-500 dark:text-indigo-400' : 'text-slate-400'}`}>
+                    {Math.round(usageRatio)}%
+                  </span>
+                </div>
                 <div className="w-full h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
                   <div 
                     className={`h-full transition-all duration-1000 ease-out rounded-full ${isOwned ? 'bg-emerald-500' : 'bg-indigo-500'}`} 
-                    style={{ width: `${usageRatio}%` }}
+                    style={{ width: `${Math.min(100, usageRatio)}%` }}
                   ></div>
                 </div>
               </div>
@@ -375,44 +381,49 @@ const App: React.FC = () => {
         </tr>
         {isExpanded && (
           <tr className="bg-slate-50/50 dark:bg-slate-950/40">
-            <td colSpan={5} className="px-2 py-3">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-3">
+            <td colSpan={5} className="px-4 py-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                {/* Left Side: Metadata and Notes */}
+                <div className="space-y-4">
                   <div className="flex items-center flex-wrap gap-x-4 gap-y-2 text-[10px] font-black uppercase tracking-wider text-slate-400">
-                    <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-md">
-                      <Hash className="w-3 h-3 text-indigo-500" />
+                    <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 px-2.5 py-1.5 rounded-lg">
+                      <Hash className="w-3.5 h-3.5 text-indigo-500" />
                       <span>代碼：{bank.code}</span>
                     </div>
                     <div className="flex items-center gap-1">
-                      <ShieldCheck className="w-3.5 h-3.5" />
+                      <ShieldCheck className="w-4 h-4" />
                       <span>{getStatusLabel()}</span>
                     </div>
                     <div className="flex items-center gap-1">
-                      <Calculator className="w-3.5 h-3.5" />
+                      <Calculator className="w-4 h-4" />
                       <span>跨轉/提：{data.transfers}</span>
                     </div>
                   </div>
-                  
-                  {/* Usage Ratio UI in Expanded View */}
-                  {data.numericQuota !== Infinity && (
-                    <div className="flex items-center justify-between gap-4 px-2 py-1">
-                       <span className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">額度使用率</span>
-                       <div className="flex-1 max-w-[120px] h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden mx-2">
-                         <div 
-                           className={`h-full transition-all duration-1000 ease-out rounded-full ${isOwned ? 'bg-emerald-500' : 'bg-indigo-500'}`} 
-                           style={{ width: `${Math.min(100, usageRatio)}%` }}
-                         ></div>
-                       </div>
-                       <span className={`text-[10px] font-black ${usageRatio > 0 ? 'text-indigo-500 dark:text-indigo-400' : 'text-slate-400'}`}>
-                         {Math.round(usageRatio)}%
-                       </span>
-                    </div>
-                  )}
 
                   {data.notes && (
-                    <div className="p-3 bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-800 text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed font-medium shadow-sm">
-                      <Info className="w-3.5 h-3.5 inline-block mr-1.5 text-indigo-300 mb-0.5" />
-                      {data.notes}
+                    <div className="p-4 bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-800 text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed font-medium shadow-sm flex gap-2">
+                      <Info className="w-4 h-4 flex-shrink-0 text-indigo-400 mt-0.5" />
+                      <span>{data.notes}</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Right Side: Usage Ratio Aligned Right */}
+                <div className="flex flex-col items-end justify-center space-y-3">
+                  {data.numericQuota !== Infinity && (
+                    <div className="w-full max-w-[200px] space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">額度使用率</span>
+                        <span className={`text-[10px] font-black ${usageRatio > 0 ? 'text-indigo-500 dark:text-indigo-400' : 'text-slate-400'}`}>
+                          {Math.round(usageRatio)}%
+                        </span>
+                      </div>
+                      <div className="w-full h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                        <div 
+                          className={`h-full transition-all duration-1000 ease-out rounded-full ${isOwned ? 'bg-emerald-500' : 'bg-indigo-500'}`} 
+                          style={{ width: `${Math.min(100, usageRatio)}%` }}
+                        ></div>
+                      </div>
                     </div>
                   )}
                 </div>
