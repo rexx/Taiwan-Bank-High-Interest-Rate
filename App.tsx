@@ -191,7 +191,6 @@ const App: React.FC = () => {
   const formatToWan = (val: number) => {
     if (val === 0) return '$0';
     const wan = val / 10000;
-    // 如果有小數點（如 1.5 萬），保留一位小數，否則顯示整數
     return `${Number.isInteger(wan) ? wan : wan.toFixed(1)} 萬`;
   };
 
@@ -201,6 +200,7 @@ const App: React.FC = () => {
     const data: BankRateInfo = isOwned ? bank.oldCustomer : bank.newCustomer;
     const depositAmount = allocation.result[bank.id] || 0;
     const isSelectedForDeposit = depositAmount > 0;
+    const usageRatio = data.numericQuota === Infinity ? 0 : (depositAmount / data.numericQuota) * 100;
 
     const getStatusLabel = () => {
       if (isOwned) return '已持有 (舊戶)';
@@ -300,7 +300,7 @@ const App: React.FC = () => {
                 <div className="w-full h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
                   <div 
                     className={`h-full transition-all duration-1000 ease-out rounded-full ${isOwned ? 'bg-emerald-500' : 'bg-indigo-500'}`} 
-                    style={{ width: `${(depositAmount / data.numericQuota) * 100}%` }}
+                    style={{ width: `${usageRatio}%` }}
                   ></div>
                 </div>
               </div>
@@ -358,6 +358,15 @@ const App: React.FC = () => {
                 <span className="text-slate-300 dark:text-slate-700 text-[10px]">/</span>
                 <span className="text-[10px] font-black text-slate-400 dark:text-slate-500">{data.quota}</span>
               </div>
+              {/* Compact Mode Progress Bar */}
+              {data.numericQuota !== Infinity && (
+                <div className="w-16 h-1 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                  <div 
+                    className={`h-full transition-all duration-1000 ease-out rounded-full ${isOwned ? 'bg-emerald-500' : 'bg-indigo-500'}`} 
+                    style={{ width: `${Math.min(100, usageRatio)}%` }}
+                  ></div>
+                </div>
+              )}
             </div>
           </td>
           <td className="px-2 py-3 text-right">
@@ -383,6 +392,23 @@ const App: React.FC = () => {
                       <span>跨轉/提：{data.transfers}</span>
                     </div>
                   </div>
+                  
+                  {/* Usage Ratio UI in Expanded View */}
+                  {data.numericQuota !== Infinity && (
+                    <div className="flex items-center justify-between gap-4 px-2 py-1">
+                       <span className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">額度使用率</span>
+                       <div className="flex-1 max-w-[120px] h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden mx-2">
+                         <div 
+                           className={`h-full transition-all duration-1000 ease-out rounded-full ${isOwned ? 'bg-emerald-500' : 'bg-indigo-500'}`} 
+                           style={{ width: `${Math.min(100, usageRatio)}%` }}
+                         ></div>
+                       </div>
+                       <span className={`text-[10px] font-black ${usageRatio > 0 ? 'text-indigo-500 dark:text-indigo-400' : 'text-slate-400'}`}>
+                         {Math.round(usageRatio)}%
+                       </span>
+                    </div>
+                  )}
+
                   {data.notes && (
                     <div className="p-3 bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-800 text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed font-medium shadow-sm">
                       <Info className="w-3.5 h-3.5 inline-block mr-1.5 text-indigo-300 mb-0.5" />
