@@ -211,7 +211,8 @@ const App: React.FC = () => {
     const getStatusColors = () => {
       if (isOwned) return { bg: 'bg-emerald-500/20', text: 'text-emerald-600 dark:text-emerald-400', border: 'border-emerald-500/30' };
       if (isConsidering) return { bg: 'bg-indigo-500/20', text: 'text-indigo-600 dark:text-indigo-400', border: 'border-indigo-500/30' };
-      return { bg: 'bg-slate-500/10', text: 'text-slate-400 dark:text-slate-500', border: 'border-slate-300/30 dark:border-slate-800' };
+      // Not owned banks should also look clear, using a neutral but non-dimmed style
+      return { bg: 'bg-slate-500/10', text: 'text-slate-600 dark:text-slate-400', border: 'border-slate-300 dark:border-slate-800' };
     };
 
     const colors = getStatusColors();
@@ -279,7 +280,7 @@ const App: React.FC = () => {
 
             <div className="pt-2">
               <div className={`text-4xl md:text-5xl font-black tracking-tighter transition-colors leading-none ${
-                isOwned ? 'text-emerald-500 dark:text-emerald-400' : (isConsidering ? 'text-indigo-500 dark:text-indigo-400' : 'text-slate-300 dark:text-slate-700')
+                isOwned ? 'text-emerald-500 dark:text-emerald-400' : 'text-indigo-500 dark:text-indigo-400'
               }`}>{data.display}</div>
               <span className="text-[10px] text-slate-400 dark:text-slate-500 font-black uppercase mt-2 block tracking-widest">
                 {isOwned ? '目前適用：舊戶利率' : '目前適用：新戶利率'}
@@ -345,11 +346,11 @@ const App: React.FC = () => {
           </td>
           <td className="px-2 py-3">
             <div className="flex items-center truncate">
-              <span className={`text-xs truncate font-black ${isOwned || isConsidering ? 'text-slate-800 dark:text-slate-100' : 'text-slate-400 dark:text-slate-600'}`}>{bank.name}</span>
+              <span className={`text-xs truncate font-black text-slate-800 dark:text-slate-100`}>{bank.name}</span>
             </div>
           </td>
           <td className={`px-2 py-3 text-right font-black text-xs whitespace-nowrap ${
-            isOwned ? 'text-emerald-600 dark:text-emerald-400' : (isConsidering ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-400 dark:text-slate-700')
+            isOwned ? 'text-emerald-600 dark:text-emerald-400' : 'text-indigo-600 dark:text-indigo-400'
           }`}>
             {data.display}
           </td>
@@ -362,7 +363,7 @@ const App: React.FC = () => {
                   <span className="text-[10px] font-black text-slate-300 dark:text-slate-700">$0</span>
                 )}
                 <span className="text-slate-300 dark:text-slate-700 text-[10px]">/</span>
-                <span className="text-[10px] font-black text-slate-400 dark:text-slate-500">{data.quota}</span>
+                <span className="text-[10px] font-black text-slate-600 dark:text-slate-400">{data.quota}</span>
               </div>
               {/* Compact Mode Progress Bar */}
               {data.numericQuota !== Infinity && (
@@ -456,7 +457,7 @@ const App: React.FC = () => {
             <span className="text-amber-700 dark:text-amber-400 font-black text-sm flex items-center gap-2">
                還有 {formatToWan(allocation.remaining)} 資金溢出
             </span>
-            <span className="text-[10px] text-amber-600/70 dark:text-amber-500/60 font-bold flex items-center gap-1 mt-1.5 leading-relaxed">
+            <span className="text-[10px] text-amber-600/70 dark:text-amber-500/60 font-bold flex items-center justify-center gap-1 mt-1.5 leading-relaxed">
               <PlusCircle className="w-3 h-3 flex-shrink-0" />
               可點擊 ( <Heart className="w-2.5 h-2.5 inline mx-0.5" /> ) 考慮申辦，或是點擊 ( <CheckCircle className="w-2.5 h-2.5 inline mx-0.5" /> ) 切換為已持有帳戶
             </span>
