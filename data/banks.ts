@@ -53,7 +53,7 @@ export const BANKS: BankData[] = [
       quota: '80萬',
       numericQuota: 800000,
       transfers: '5轉/3提',
-      notes: '新戶首月後級距'
+      notes: '新戶首月後級距（20萬~100萬）'
     },
     oldCustomer: {
       rate: 1.5,
@@ -69,12 +69,12 @@ export const BANKS: BankData[] = [
     name: '富邦奈米存',
     code: '012',
     newCustomer: {
-      rate: 5.0,
-      display: '5.000%',
+      rate: 2.0,
+      display: '2.000%',
       quota: '10萬',
       numericQuota: 100000,
       transfers: '5轉/5提',
-      notes: '任務 6 選 3，開戶起算 180 天'
+      notes: '開戶成功日起算 180 天'
     },
     oldCustomer: {
       rate: 0.8,
