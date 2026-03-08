@@ -6,6 +6,7 @@ import { Check, Info, Wallet, UserCheck, ExternalLink, X, Calculator, TrendingUp
 
 const OWNED_KEY = 'taiwan-bank-owned-ids-v2';
 const CONSIDERING_KEY = 'taiwan-bank-considering-ids-v2';
+const OLD_TASK_NOT_MET_KEY = 'taiwan-bank-old-task-not-met-codes-v1';
 const SETUP_COMPLETED_KEY = 'taiwan-bank-setup-completed';
 const THEME_KEY = 'taiwan-bank-theme';
 const VIEW_MODE_KEY = 'taiwan-bank-view-mode';
@@ -29,6 +30,18 @@ const App: React.FC = () => {
 
   const [consideringBankCodes, setConsideringBankCodes] = useState<Set<string>>(() => {
     const saved = localStorage.getItem(CONSIDERING_KEY);
+    if (saved) {
+      try {
+        return new Set(JSON.parse(saved));
+      } catch (e) {
+        return new Set();
+      }
+    }
+    return new Set();
+  });
+
+  const [oldTaskNotMetBankCodes, setOldTaskNotMetBankCodes] = useState<Set<string>>(() => {
+    const saved = localStorage.getItem(OLD_TASK_NOT_MET_KEY);
     if (saved) {
       try {
         return new Set(JSON.parse(saved));
@@ -69,6 +82,10 @@ const App: React.FC = () => {
   }, [consideringBankCodes]);
 
   useEffect(() => {
+    localStorage.setItem(OLD_TASK_NOT_MET_KEY, JSON.stringify(Array.from(oldTaskNotMetBankCodes)));
+  }, [oldTaskNotMetBankCodes]);
+
+  useEffect(() => {
     localStorage.setItem(VIEW_MODE_KEY, viewMode);
   }, [viewMode]);
 
@@ -101,15 +118,18 @@ const App: React.FC = () => {
   const toggleBankOwnedByCode = (code: string) => {
     const newOwned = new Set(ownedBankCodes);
     const newConsidering = new Set(consideringBankCodes);
+    const newOldTaskNotMet = new Set(oldTaskNotMetBankCodes);
     
     if (newOwned.has(code)) {
       newOwned.delete(code);
+      newOldTaskNotMet.delete(code);
     } else {
       newOwned.add(code);
       newConsidering.delete(code);
     }
     setOwnedBankCodes(newOwned);
     setConsideringBankCodes(newConsidering);
+    setOldTaskNotMetBankCodes(newOldTaskNotMet);
   };
 
   const toggleBankConsideringByCode = (code: string) => {
@@ -121,6 +141,28 @@ const App: React.FC = () => {
       newConsidering.add(code);
     }
     setConsideringBankCodes(newConsidering);
+  };
+
+  const toggleOldTaskNotMetByCode = (code: string) => {
+    if (!ownedBankCodes.has(code)) return;
+    const newSet = new Set(oldTaskNotMetBankCodes);
+    if (newSet.has(code)) newSet.delete(code);
+    else newSet.add(code);
+    setOldTaskNotMetBankCodes(newSet);
+  };
+
+  const setOldTaskStatusByCode = (code: string, notMet: boolean) => {
+    if (!ownedBankCodes.has(code)) return;
+    const newSet = new Set(oldTaskNotMetBankCodes);
+    if (notMet) newSet.add(code);
+    else newSet.delete(code);
+    setOldTaskNotMetBankCodes(newSet);
+  };
+
+  const getRateData = (bank: BankData, isOwned: boolean): BankRateInfo => {
+    if (!isOwned) return bank.newCustomer;
+    const useTaskNotMet = oldTaskNotMetBankCodes.has(bank.code) && !!bank.oldCustomerTaskNotMet;
+    return useTaskNotMet ? bank.oldCustomerTaskNotMet! : bank.oldCustomer;
   };
 
   const toggleExpandRow = (id: string) => {
@@ -144,11 +186,11 @@ const App: React.FC = () => {
 
       if (aPriority !== bPriority) return bPriority - aPriority;
 
-      const aRate = aOwned ? a.oldCustomer.rate : a.newCustomer.rate;
-      const bRate = bOwned ? b.oldCustomer.rate : b.newCustomer.rate;
+      const aRate = getRateData(a, aOwned).rate;
+      const bRate = getRateData(b, bOwned).rate;
       return bRate - aRate;
     });
-  }, [ownedBankCodes, consideringBankCodes]);
+  }, [ownedBankCodes, consideringBankCodes, oldTaskNotMetBankCodes]);
 
   const allocation = useMemo(() => {
     let remaining = totalCash;
@@ -165,7 +207,7 @@ const App: React.FC = () => {
         continue;
       }
 
-      const data = isOwned ? bank.oldCustomer : bank.newCustomer;
+      const data = getRateData(bank, isOwned);
       const deposit = Math.min(remaining, data.numericQuota);
       result[bank.id] = deposit;
       totalInterest += deposit * (data.rate / 100);
@@ -173,7 +215,7 @@ const App: React.FC = () => {
     }
 
     return { result, totalInterest, remaining };
-  }, [totalCash, sortedBanks, ownedBankCodes, consideringBankCodes]);
+  }, [totalCash, sortedBanks, ownedBankCodes, consideringBankCodes, oldTaskNotMetBankCodes]);
 
   const uniqueBanksForSettings = useMemo(() => {
     const seen = new Set();
@@ -183,6 +225,10 @@ const App: React.FC = () => {
       return !duplicate;
     }).sort((a, b) => a.code.localeCompare(b.code, undefined, { numeric: true }));
   }, []);
+
+  const taskConfigurableOwnedBanks = useMemo(() => {
+    return uniqueBanksForSettings.filter(bank => ownedBankCodes.has(bank.code) && !!bank.oldCustomerTaskNotMet);
+  }, [uniqueBanksForSettings, ownedBankCodes]);
 
   const formatCurrency = (val: number) => {
     return new Intl.NumberFormat('zh-TW', { style: 'currency', currency: 'TWD', maximumFractionDigits: 0 }).format(val);
@@ -197,12 +243,17 @@ const App: React.FC = () => {
   const renderBankItem = (bank: BankData) => {
     const isOwned = ownedBankCodes.has(bank.code);
     const isConsidering = consideringBankCodes.has(bank.code);
-    const data: BankRateInfo = isOwned ? bank.oldCustomer : bank.newCustomer;
+    const isTaskNotMet = isOwned && oldTaskNotMetBankCodes.has(bank.code) && !!bank.oldCustomerTaskNotMet;
+    const data: BankRateInfo = getRateData(bank, isOwned);
+    const displayNotes = isTaskNotMet && bank.oldCustomer.notes
+      ? `${data.notes}；達成任務可享：${bank.oldCustomer.notes}`
+      : data.notes;
     const depositAmount = allocation.result[bank.id] || 0;
     const isSelectedForDeposit = depositAmount > 0;
     const usageRatio = data.numericQuota === Infinity ? 0 : (depositAmount / data.numericQuota) * 100;
 
     const getStatusLabel = () => {
+      if (isOwned && isTaskNotMet) return '已持有 (舊戶/未達任務)';
       if (isOwned) return '已持有 (舊戶)';
       if (isConsidering) return '考慮申辦 (新戶)';
       return '未持有 (新戶)';
@@ -242,6 +293,19 @@ const App: React.FC = () => {
                   <CheckCircle className="w-3 h-3" />
                   {isOwned ? '已持有' : '我有帳戶'}
                 </button>
+                {isOwned && bank.oldCustomerTaskNotMet && (
+                  <button
+                    onClick={(e) => { e.stopPropagation(); toggleOldTaskNotMetByCode(bank.code); }}
+                    className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black transition-all ${
+                      isTaskNotMet
+                        ? 'bg-amber-500 text-white shadow-md shadow-amber-500/20'
+                        : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:bg-amber-50 dark:hover:bg-amber-900/20 hover:text-amber-600'
+                    }`}
+                  >
+                    <Ban className="w-3 h-3" />
+                    {isTaskNotMet ? '未達任務' : '已達任務'}
+                  </button>
+                )}
                 {!isOwned && (
                   <button 
                     onClick={(e) => { e.stopPropagation(); toggleBankConsideringByCode(bank.code); }}
@@ -282,16 +346,20 @@ const App: React.FC = () => {
                 isOwned ? 'text-emerald-500 dark:text-emerald-400' : 'text-indigo-500 dark:text-indigo-400'
               }`}>{data.display}</div>
               <span className="text-[10px] text-slate-400 dark:text-slate-500 font-black uppercase mt-2 block tracking-widest">
-                {isOwned ? '目前適用：舊戶利率' : '目前適用：新戶利率'}
+                {isOwned
+                  ? (bank.oldCustomerTaskNotMet
+                    ? (isTaskNotMet ? '目前適用：舊戶未達任務利率' : '目前適用：舊戶達任務利率')
+                    : '目前適用：舊戶利率')
+                  : '目前適用：新戶利率'}
               </span>
             </div>
 
             <div className="h-px bg-slate-100 dark:bg-slate-800/50 w-full"></div>
 
-            {data.notes && (
+            {displayNotes && (
               <div className="text-[11px] text-slate-500 dark:text-slate-400 flex gap-2 items-start leading-relaxed font-medium min-h-[2.5rem]">
                 <Info className="w-4 h-4 flex-shrink-0 text-slate-300 dark:text-slate-600" />
-                <span>{data.notes}</span>
+                <span>{displayNotes}</span>
               </div>
             )}
 
@@ -339,6 +407,15 @@ const App: React.FC = () => {
                     className={`p-1.5 rounded-lg transition-all ${isConsidering ? 'bg-rose-500 text-white shadow-md shadow-rose-500/20' : 'bg-slate-100 dark:bg-slate-800 text-slate-400 hover:text-rose-500'}`}
                   >
                     {isConsidering ? <HeartOff className="w-3.5 h-3.5" /> : <Heart className="w-3.5 h-3.5" />}
+                  </button>
+                )}
+                {isOwned && bank.oldCustomerTaskNotMet && (
+                  <button
+                    onClick={(e) => { e.stopPropagation(); toggleOldTaskNotMetByCode(bank.code); }}
+                    className={`p-1.5 rounded-lg transition-all ${isTaskNotMet ? 'bg-amber-500 text-white shadow-md shadow-amber-500/20' : 'bg-slate-100 dark:bg-slate-800 text-slate-400 hover:text-amber-500'}`}
+                    title={isTaskNotMet ? '使用舊戶未達任務利率' : '使用舊戶達任務利率'}
+                  >
+                    <Ban className="w-3.5 h-3.5" />
                   </button>
                 )}
              </div>
@@ -398,10 +475,10 @@ const App: React.FC = () => {
                     </div>
                   </div>
 
-                  {data.notes && (
+                  {displayNotes && (
                     <div className="p-4 bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-800 text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed font-medium shadow-sm flex gap-2">
                       <Info className="w-4 h-4 flex-shrink-0 text-indigo-400 mt-0.5" />
-                      <span>{data.notes}</span>
+                      <span>{displayNotes}</span>
                     </div>
                   )}
                 </div>
@@ -618,7 +695,7 @@ const App: React.FC = () => {
                   <UserCheck className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
                   我有哪些帳戶？
                 </h2>
-                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 font-medium">勾選您已持有的帳戶，系統將自動套用「舊戶利率」。</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 font-medium">勾選已持有帳戶後，系統會套用舊戶利率；若有任務差異，可在下方指定「達成 / 未達成」。</p>
               </div>
               <button onClick={closeSettings} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-all text-slate-400 hover:text-indigo-600 active:scale-90">
                 <X className="w-5 h-5" />
@@ -649,6 +726,52 @@ const App: React.FC = () => {
                   </button>
                 ))}
               </div>
+
+              {taskConfigurableOwnedBanks.length > 0 && (
+                <div className="mt-5 p-4 rounded-2xl border-2 border-amber-200/70 dark:border-amber-900/40 bg-amber-50/50 dark:bg-amber-900/10">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Ban className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+                    <h3 className="text-sm font-black text-amber-700 dark:text-amber-300">舊戶任務狀態（影響最佳化利率）</h3>
+                  </div>
+                  <div className="space-y-2">
+                    {taskConfigurableOwnedBanks.map((bank) => {
+                      const isNotMet = oldTaskNotMetBankCodes.has(bank.code);
+                      return (
+                        <div key={`task-status-${bank.code}`} className="flex items-center justify-between gap-2 p-3 rounded-xl bg-white/80 dark:bg-slate-900/60 border border-amber-100 dark:border-amber-900/40">
+                          <div className="flex items-center gap-2">
+                            <span className="text-[10px] font-black bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded text-slate-500 dark:text-slate-400 tracking-wider">#{bank.code}</span>
+                            <span className="font-black text-sm text-slate-700 dark:text-slate-200">{bank.name.replace(/\(級距.\)|\(\d\)/, '').trim()}</span>
+                          </div>
+                          <div className="flex items-center gap-1.5">
+                            <button
+                              onClick={() => setOldTaskStatusByCode(bank.code, false)}
+                              className={`px-2.5 py-1 rounded-lg text-[10px] font-black transition-all ${
+                                !isNotMet
+                                  ? 'bg-emerald-500 text-white shadow-md shadow-emerald-500/20'
+                                  : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-300 hover:text-emerald-600'
+                              }`}
+                              title="使用舊戶達任務利率"
+                            >
+                              舊戶達任務
+                            </button>
+                            <button
+                              onClick={() => setOldTaskStatusByCode(bank.code, true)}
+                              className={`px-2.5 py-1 rounded-lg text-[10px] font-black transition-all ${
+                                isNotMet
+                                  ? 'bg-amber-500 text-white shadow-md shadow-amber-500/20'
+                                  : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-300 hover:text-amber-600'
+                              }`}
+                              title="使用舊戶未達任務利率"
+                            >
+                              舊戶未達任務
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="p-6 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/80 dark:bg-slate-900/80 backdrop-blur-md">
@@ -657,7 +780,7 @@ const App: React.FC = () => {
                 <span className="text-base font-black text-emerald-600 dark:text-emerald-400">{ownedBankCodes.size} <span className="text-xs">間</span></span>
               </div>
               <div className="flex gap-3">
-                <button onClick={() => { setOwnedBankCodes(new Set()); setConsideringBankCodes(new Set()); }} className="px-3 py-2 text-slate-400 hover:text-red-500 text-xs font-black transition-colors uppercase tracking-widest">重設</button>
+                <button onClick={() => { setOwnedBankCodes(new Set()); setConsideringBankCodes(new Set()); setOldTaskNotMetBankCodes(new Set()); }} className="px-3 py-2 text-slate-400 hover:text-red-500 text-xs font-black transition-colors uppercase tracking-widest">重設</button>
                 <button onClick={closeSettings} className="px-8 py-3 bg-indigo-600 dark:bg-indigo-500 text-white rounded-xl font-black text-xs hover:scale-105 active:scale-95 transition-all shadow-xl shadow-indigo-500/30">確認</button>
               </div>
             </div>

@@ -20,6 +20,14 @@ export const BANKS: BankData[] = [
       numericQuota: 300000,
       transfers: '10轉/10提',
       notes: '解任務最高 4% (基本 1.5% + 加碼 2.5%)'
+    },
+    oldCustomerTaskNotMet: {
+      rate: 1.5,
+      display: '1.500%',
+      quota: '30萬',
+      numericQuota: 300000,
+      transfers: '10轉/10提',
+      notes: '未達任務條件時利率（初級會員）'
     }
   },
   {

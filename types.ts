@@ -14,6 +14,7 @@ export interface BankData {
   code: string;
   newCustomer: BankRateInfo;
   oldCustomer: BankRateInfo;
+  oldCustomerTaskNotMet?: BankRateInfo;
 }
 
 export type ViewType = 'combined' | 'newOnly' | 'oldOnly';
