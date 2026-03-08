@@ -2,7 +2,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { BANKS } from './data/banks';
 import { BankData, BankRateInfo } from './types';
-import { Check, Info, Wallet, UserCheck, ExternalLink, X, Calculator, TrendingUp, Moon, Sun, UserPlus, ShieldCheck, Ban, LayoutGrid, List, ChevronDown, ChevronUp, CheckCircle2, PlusCircle, Coins, Heart, HeartOff, CheckCircle, Hash } from 'lucide-react';
+import { Check, Info, Wallet, UserCheck, ExternalLink, X, Calculator, TrendingUp, Moon, Sun, UserPlus, ShieldCheck, Ban, LayoutGrid, List, ChevronDown, ChevronUp, CheckCircle2, PlusCircle, Coins, Heart, HeartOff, CheckCircle, Hash, BadgeCheck } from 'lucide-react';
 
 const OWNED_KEY = 'taiwan-bank-owned-ids-v2';
 const CONSIDERING_KEY = 'taiwan-bank-considering-ids-v2';
@@ -302,7 +302,7 @@ const App: React.FC = () => {
                         : 'bg-amber-500 text-white shadow-md shadow-amber-500/20'
                     }`}
                   >
-                    <Ban className="w-3 h-3" />
+                    <BadgeCheck className="w-3 h-3" />
                     {isTaskNotMet ? '未達任務' : '已達任務'}
                   </button>
                 )}
@@ -415,7 +415,7 @@ const App: React.FC = () => {
                     className={`p-1.5 rounded-lg transition-all ${isTaskNotMet ? 'bg-slate-100 dark:bg-slate-800 text-slate-400 hover:text-amber-500' : 'bg-amber-500 text-white shadow-md shadow-amber-500/20'}`}
                     title={isTaskNotMet ? '使用舊戶未達任務利率' : '使用舊戶達任務利率'}
                   >
-                    <Ban className="w-3.5 h-3.5" />
+                    <BadgeCheck className="w-3.5 h-3.5" />
                   </button>
                 )}
              </div>
