@@ -298,8 +298,8 @@ const App: React.FC = () => {
                     onClick={(e) => { e.stopPropagation(); toggleOldTaskNotMetByCode(bank.code); }}
                     className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black transition-all ${
                       isTaskNotMet
-                        ? 'bg-amber-500 text-white shadow-md shadow-amber-500/20'
-                        : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:bg-amber-50 dark:hover:bg-amber-900/20 hover:text-amber-600'
+                        ? 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:bg-amber-50 dark:hover:bg-amber-900/20 hover:text-amber-600'
+                        : 'bg-amber-500 text-white shadow-md shadow-amber-500/20'
                     }`}
                   >
                     <Ban className="w-3 h-3" />
@@ -412,7 +412,7 @@ const App: React.FC = () => {
                 {isOwned && bank.oldCustomerTaskNotMet && (
                   <button
                     onClick={(e) => { e.stopPropagation(); toggleOldTaskNotMetByCode(bank.code); }}
-                    className={`p-1.5 rounded-lg transition-all ${isTaskNotMet ? 'bg-amber-500 text-white shadow-md shadow-amber-500/20' : 'bg-slate-100 dark:bg-slate-800 text-slate-400 hover:text-amber-500'}`}
+                    className={`p-1.5 rounded-lg transition-all ${isTaskNotMet ? 'bg-slate-100 dark:bg-slate-800 text-slate-400 hover:text-amber-500' : 'bg-amber-500 text-white shadow-md shadow-amber-500/20'}`}
                     title={isTaskNotMet ? '使用舊戶未達任務利率' : '使用舊戶達任務利率'}
                   >
                     <Ban className="w-3.5 h-3.5" />
