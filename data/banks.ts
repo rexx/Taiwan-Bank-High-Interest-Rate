@@ -133,6 +133,14 @@ export const BANKS: BankData[] = [
       numericQuota: 150000,
       transfers: '20轉/12提',
       notes: '解任務最高加碼至 2.8% (基本 1.9% + 任務最高 0.9%)'
+    },
+    oldCustomerTaskNotMet: {
+      rate: 1.9,
+      display: '1.900%',
+      quota: '15萬',
+      numericQuota: 150000,
+      transfers: '20轉/12提',
+      notes: '未達任務條件時利率（基本利率）'
     }
   },
   {
@@ -154,6 +162,14 @@ export const BANKS: BankData[] = [
       numericQuota: 300000,
       transfers: '5轉/5提',
       notes: '解任務最高至 2.15% (基本 0.65% ~ 最高 2.15%)'
+    },
+    oldCustomerTaskNotMet: {
+      rate: 0.65,
+      display: '0.650%',
+      quota: '10~30萬',
+      numericQuota: 300000,
+      transfers: '5轉/5提',
+      notes: '未達任務條件時利率（基本利率）'
     }
   },
   {
@@ -448,6 +464,14 @@ export const BANKS: BankData[] = [
       numericQuota: 100000,
       transfers: '30轉/30提',
       notes: '大柴任務最高 1.64% (0.9% ~ 1.64%)'
+    },
+    oldCustomerTaskNotMet: {
+      rate: 0.905,
+      display: '0.905%',
+      quota: '10萬',
+      numericQuota: 100000,
+      transfers: '30轉/30提',
+      notes: '未達分級任務時利率（基本優惠）'
     }
   }
 ];
