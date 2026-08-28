@@ -30,9 +30,13 @@ export const BANKS: BankData[] = [
       notes: '未達任務條件時利率（初級會員）'
     }
   },
+  // O-Bank runs two stacked campaigns: an inbound-transfer program open to all
+  // customers (2.1% up to 200k, 1.5% from 200k to 1M) and a first-month 12% bonus
+  // capped at 100k for brand-new customers. Splitting on the union of both sets of
+  // tier boundaries lets new and existing customers share one set of rows.
   {
     id: '048-tier1',
-    name: '王道 O-Bank (1)',
+    name: '王道 O-Bank (0~10萬)',
     code: '048',
     newCustomer: {
       rate: 12.0,
@@ -40,20 +44,41 @@ export const BANKS: BankData[] = [
       quota: '10萬',
       numericQuota: 100000,
       transfers: '5轉/3提',
-      notes: '為期 1 個月'
+      notes: '新戶好禮 10萬內 12%，為期 1 個月'
     },
     oldCustomer: {
       rate: 2.1,
       display: '2.100%',
-      quota: '20萬',
-      numericQuota: 200000,
+      quota: '10萬',
+      numericQuota: 100000,
       transfers: '5轉/3提',
-      notes: '20萬內享 2.1%'
+      notes: '他轉專案 20萬內 2.1%'
     }
   },
   {
     id: '048-tier2',
-    name: '王道 O-Bank (2)',
+    name: '王道 O-Bank (10~20萬)',
+    code: '048',
+    newCustomer: {
+      rate: 2.1,
+      display: '2.100%',
+      quota: '10萬',
+      numericQuota: 100000,
+      transfers: '5轉/3提',
+      notes: '他轉專案 20萬內 2.1%；新戶好禮 12% 僅適用前 10 萬'
+    },
+    oldCustomer: {
+      rate: 2.1,
+      display: '2.100%',
+      quota: '10萬',
+      numericQuota: 100000,
+      transfers: '5轉/3提',
+      notes: '他轉專案 20萬內 2.1%'
+    }
+  },
+  {
+    id: '048-tier3',
+    name: '王道 O-Bank (20~100萬)',
     code: '048',
     newCustomer: {
       rate: 1.5,
@@ -61,7 +86,7 @@ export const BANKS: BankData[] = [
       quota: '80萬',
       numericQuota: 800000,
       transfers: '5轉/3提',
-      notes: '新戶首月後級距（20萬~100萬）'
+      notes: '他轉專案 20~100萬 1.5%'
     },
     oldCustomer: {
       rate: 1.5,
@@ -69,7 +94,28 @@ export const BANKS: BankData[] = [
       quota: '80萬',
       numericQuota: 800000,
       transfers: '5轉/3提',
-      notes: '20萬~100萬享 1.5%'
+      notes: '他轉專案 20~100萬 1.5%'
+    }
+  },
+  {
+    id: '809',
+    name: '凱基 Karry',
+    code: '809',
+    newCustomer: {
+      rate: 8.8,
+      display: '8.800%',
+      quota: '5萬',
+      numericQuota: 50000,
+      transfers: '30次(共)',
+      notes: '任務 6 選 1；5萬以上級距為 5~30萬牌告、30~100萬 1.28%、100~200萬 1.78%、200~300萬 1.98%'
+    },
+    oldCustomer: {
+      rate: 0,
+      display: '無優惠',
+      quota: '—',
+      numericQuota: 0,
+      transfers: '30次(共)',
+      notes: '新戶專案限定，既有戶權益依銀行公告'
     }
   },
   {
@@ -144,6 +190,27 @@ export const BANKS: BankData[] = [
     }
   },
   {
+    id: '806',
+    name: '元大鑽金',
+    code: '806',
+    newCustomer: {
+      rate: 3.0,
+      display: '3.000%',
+      quota: '5萬',
+      numericQuota: 50000,
+      transfers: '99次(共)',
+      notes: '自開戶完成日起 6 個月，起息點 1 萬元'
+    },
+    oldCustomer: {
+      rate: 0,
+      display: '無優惠',
+      quota: '—',
+      numericQuota: 0,
+      transfers: '2轉',
+      notes: '無舊戶優惠利率，依活儲牌告計息；每月登入禮 2 次免跨行轉帳'
+    }
+  },
+  {
     id: '108',
     name: '陽信 iSunny',
     code: '108',
@@ -191,6 +258,27 @@ export const BANKS: BankData[] = [
       numericQuota: 100000,
       transfers: '20轉/10提',
       notes: '存款餘額需達 1 萬以上'
+    }
+  },
+  {
+    id: '052',
+    name: '渣打心幸福',
+    code: '052',
+    newCustomer: {
+      rate: 2.5,
+      display: '2.500%',
+      quota: '300萬',
+      numericQuota: 3000000,
+      transfers: '0~100次',
+      notes: '牌告 0.9% + 數位開立 0.2% + 餘額滿 50萬 0.9%，一般最高 2%；優先理財貴賓再加 0.2%~0.5% 至 2.5%'
+    },
+    oldCustomer: {
+      rate: 0.9,
+      display: '0.900%',
+      quota: '不限',
+      numericQuota: Infinity,
+      transfers: '0~100次',
+      notes: '加碼為數位新戶限定；舊戶依心幸福牌告 0.625%~0.9% 計息（依當月新匯入資金）'
     }
   },
   {

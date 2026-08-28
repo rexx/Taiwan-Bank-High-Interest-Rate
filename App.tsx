@@ -250,7 +250,9 @@ const App: React.FC = () => {
       : data.notes;
     const depositAmount = allocation.result[bank.id] || 0;
     const isSelectedForDeposit = depositAmount > 0;
-    const usageRatio = data.numericQuota === Infinity ? 0 : (depositAmount / data.numericQuota) * 100;
+    // Banks with no old-customer benefit carry a zero quota, so they get no bar and no ratio.
+    const hasQuotaBar = Number.isFinite(data.numericQuota) && data.numericQuota > 0;
+    const usageRatio = hasQuotaBar ? (depositAmount / data.numericQuota) * 100 : 0;
 
     const getStatusLabel = () => {
       if (isOwned && isTaskNotMet) return '已持有 (舊戶/未達任務)';
@@ -363,7 +365,7 @@ const App: React.FC = () => {
               </div>
             )}
 
-            {isSelectedForDeposit && data.numericQuota !== Infinity && (
+            {isSelectedForDeposit && hasQuotaBar && (
               <div className="pt-2 space-y-1.5">
                 <div className="flex items-center justify-between px-0.5">
                   <span className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">額度使用率</span>
@@ -441,7 +443,7 @@ const App: React.FC = () => {
                 <span className="text-slate-300 dark:text-slate-700 text-[10px]">/</span>
                 <span className="text-[10px] font-black text-slate-600 dark:text-slate-400">{data.quota}</span>
               </div>
-              {data.numericQuota !== Infinity && (
+              {hasQuotaBar && (
                 <div className="w-16 h-1 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
                   <div 
                     className={`h-full transition-all duration-1000 ease-out rounded-full ${isOwned ? 'bg-emerald-500' : 'bg-indigo-500'}`} 
@@ -484,7 +486,7 @@ const App: React.FC = () => {
                 </div>
 
                 <div className="flex flex-col items-end justify-center space-y-3">
-                  {data.numericQuota !== Infinity && (
+                  {hasQuotaBar && (
                     <div className="w-full max-w-[200px] space-y-2">
                       <div className="flex items-center justify-between">
                         <span className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">額度使用率</span>
