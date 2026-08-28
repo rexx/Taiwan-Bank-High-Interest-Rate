@@ -8,7 +8,7 @@
 
 ## 本地開發
 
-需要 Node.js 20 以上。
+需要 Node.js 24 以上。
 
 ```bash
 npm install
