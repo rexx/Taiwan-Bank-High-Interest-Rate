@@ -6,26 +6,26 @@ export const BANKS: BankData[] = [
     name: '聯邦 New New',
     code: '803',
     newCustomer: {
-      rate: 15.0,
-      display: '15.000%',
-      quota: '10萬',
-      numericQuota: 100000,
+      rate: 10.0,
+      display: '10.000%',
+      quota: '15萬',
+      numericQuota: 150000,
       transfers: '10轉/10提',
       notes: '僅限開戶當月21日~次月20日'
     },
     oldCustomer: {
-      rate: 4.0,
-      display: '4.000%',
-      quota: '30萬',
-      numericQuota: 300000,
+      rate: 3.0,
+      display: '3.000%',
+      quota: '40萬',
+      numericQuota: 400000,
       transfers: '10轉/10提',
-      notes: '解任務最高 4% (基本 1.5% + 加碼 2.5%)'
+      notes: '解任務升級金級會員享 3% (初級會員 1.5%)'
     },
     oldCustomerTaskNotMet: {
       rate: 1.5,
       display: '1.500%',
-      quota: '30萬',
-      numericQuota: 300000,
+      quota: '40萬',
+      numericQuota: 400000,
       transfers: '10轉/10提',
       notes: '未達任務條件時利率（初級會員）'
     }
@@ -35,12 +35,12 @@ export const BANKS: BankData[] = [
     name: '王道 O-Bank (1)',
     code: '048',
     newCustomer: {
-      rate: 8.8,
-      display: '8.800%',
+      rate: 12.0,
+      display: '12.000%',
       quota: '10萬',
       numericQuota: 100000,
       transfers: '5轉/3提',
-      notes: '為期 2 個月'
+      notes: '為期 1 個月'
     },
     oldCustomer: {
       rate: 2.1,
@@ -77,12 +77,12 @@ export const BANKS: BankData[] = [
     name: '富邦奈米存',
     code: '012',
     newCustomer: {
-      rate: 2.0,
-      display: '2.000%',
-      quota: '10萬',
-      numericQuota: 100000,
+      rate: 2.75,
+      display: '2.750%',
+      quota: '20萬',
+      numericQuota: 200000,
       transfers: '5轉/5提',
-      notes: '開戶成功日起算 180 天'
+      notes: '15萬內 1%、15~20萬 8%，開戶成功日起算 180 天'
     },
     oldCustomer: {
       rate: 0.8,
@@ -100,16 +100,16 @@ export const BANKS: BankData[] = [
     newCustomer: {
       rate: 3.5,
       display: '3.500%',
-      quota: '10萬',
-      numericQuota: 100000,
+      quota: '30萬',
+      numericQuota: 300000,
       transfers: '5轉/5提',
       notes: '專案優惠利率'
     },
     oldCustomer: {
       rate: 1.8,
       display: '1.800%',
-      quota: '30萬',
-      numericQuota: 300000,
+      quota: '100萬',
+      numericQuota: 1000000,
       transfers: '5轉/5提',
       notes: '需解子帳戶任務'
     }
@@ -290,12 +290,12 @@ export const BANKS: BankData[] = [
       notes: '基本牌告'
     },
     oldCustomer: {
-      rate: 1.8,
-      display: '1.800%',
+      rate: 2.0,
+      display: '2.000%',
       quota: '20萬',
       numericQuota: 200000,
       transfers: '50轉/5提',
-      notes: '解任務 5~20萬最高享 1.8%'
+      notes: '解任務 5~20萬享 2%，逾 20 萬為 1.6%'
     }
   },
   {
@@ -326,16 +326,16 @@ export const BANKS: BankData[] = [
     newCustomer: {
       rate: 1.5,
       display: '1.500%',
-      quota: '100萬',
-      numericQuota: 1000000,
+      quota: '3000萬',
+      numericQuota: 30000000,
       transfers: '30~50次',
       notes: '口袋帳戶'
     },
     oldCustomer: {
       rate: 1.5,
       display: '1.500%',
-      quota: '100萬',
-      numericQuota: 1000000,
+      quota: '3000萬',
+      numericQuota: 30000000,
       transfers: '0~50次',
       notes: '口袋帳戶'
     }
@@ -350,7 +350,7 @@ export const BANKS: BankData[] = [
       quota: '30萬',
       numericQuota: 300000,
       transfers: '20次(共)',
-      notes: '平均餘額需達 10 萬'
+      notes: '需解任務升級大戶（如當月平均財富達 30 萬）'
     },
     oldCustomer: {
       rate: 1.5,
@@ -358,7 +358,7 @@ export const BANKS: BankData[] = [
       quota: '30萬',
       numericQuota: 300000,
       transfers: '20次(共)',
-      notes: '大戶等級專屬'
+      notes: '大戶等級專屬，需逐月解任務維持'
     }
   },
   {
@@ -434,7 +434,7 @@ export const BANKS: BankData[] = [
       quota: '10萬',
       numericQuota: 100000,
       transfers: '10次(共)',
-      notes: '限量 10,000 名'
+      notes: '限量 5,000 名'
     },
     oldCustomer: {
       rate: 1.0,
@@ -442,7 +442,7 @@ export const BANKS: BankData[] = [
       quota: '10萬',
       numericQuota: 100000,
       transfers: '10次(共)',
-      notes: '限量 15,000 名'
+      notes: ''
     }
   },
   {

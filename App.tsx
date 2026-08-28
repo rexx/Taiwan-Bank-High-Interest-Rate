@@ -794,7 +794,7 @@ const App: React.FC = () => {
             來源：PTT <ExternalLink className="w-3 h-3" />
           </a>
           <span className="opacity-20">/</span>
-          <p className="font-bold tracking-tight">更新：2026/01/04</p>
+          <p className="font-bold tracking-tight">更新：2026/08/09</p>
         </div>
         <p className="font-black tracking-[0.2em] opacity-40 uppercase">© 2026 Taiwan High Interest Tracker</p>
         <p className="opacity-50 max-w-md mx-auto leading-relaxed font-medium italic">
