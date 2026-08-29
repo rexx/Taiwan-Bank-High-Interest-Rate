@@ -233,10 +233,10 @@ export const BANKS: BankData[] = [
     oldCustomerTaskNotMet: {
       rate: 0.65,
       display: '0.650%',
-      quota: '10~30萬',
-      numericQuota: 300000,
+      quota: '10萬',
+      numericQuota: 100000,
       transfers: '5轉/5提',
-      notes: '未達任務條件時利率（基本利率）'
+      notes: '未達任務條件時利率與基本計息額度；額度提升至 30萬 需同時達成台幣與美元月均額'
     }
   },
   {
@@ -281,6 +281,10 @@ export const BANKS: BankData[] = [
       notes: '加碼為數位新戶限定；舊戶依心幸福牌告 0.625%~0.9% 計息（依當月新匯入資金）'
     }
   },
+  // The 300k cap is conditional: the base cap is 200k, raised to 300k the month
+  // after logging in to online banking or the app AND holding either a card
+  // autopay mandate or USD 1,000 in the account. The free-transfer count runs off
+  // a separate condition (Minions debit card spend), so it is not toggled here.
   {
     id: '011',
     name: '上海 Cloud Bank',
@@ -288,18 +292,26 @@ export const BANKS: BankData[] = [
     newCustomer: {
       rate: 2.085,
       display: '2.085%',
-      quota: '20~30萬',
-      numericQuota: 300000,
+      quota: '20萬',
+      numericQuota: 200000,
       transfers: '10~15次',
-      notes: '牌告 + 0.36%'
+      notes: '牌告 + 0.36%；基本限額 20萬，解加碼條件次月起 30萬。跨轉提 15 次需小小兵 Debit 卡前月消費滿 5 千，否則 10 次'
     },
     oldCustomer: {
       rate: 2.085,
       display: '2.085%',
-      quota: '20~30萬',
+      quota: '30萬',
       numericQuota: 300000,
       transfers: '10~15次',
-      notes: '牌告 + 0.36%'
+      notes: '牌告 + 0.36%；已達加碼條件（登入網銀/APP ＋ 信用卡代扣繳或美金餘額 ≧ USD 1,000）'
+    },
+    oldCustomerTaskNotMet: {
+      rate: 2.085,
+      display: '2.085%',
+      quota: '20萬',
+      numericQuota: 200000,
+      transfers: '10次(共)',
+      notes: '未達加碼條件時基本限額（牌告 + 0.36%）'
     }
   },
   {
