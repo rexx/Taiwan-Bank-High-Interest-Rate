@@ -170,7 +170,15 @@ export const BANKS: BankData[] = [
       quota: '15萬',
       numericQuota: 150000,
       transfers: '20轉/12提',
-      notes: '解任務最高加碼至 3.0% (基本 2.1% + 任務任務最高 0.9%)'
+      notes: '解任務最高加碼至 3.0% (基本 2.1% + 任務最高 0.9%)'
+    },
+    newCustomerTaskNotMet: {
+      rate: 2.1,
+      display: '2.100%',
+      quota: '15萬',
+      numericQuota: 150000,
+      transfers: '20轉/12提',
+      notes: '未達任務條件時利率（新戶基本利率）'
     },
     oldCustomer: {
       rate: 2.8,
@@ -222,6 +230,14 @@ export const BANKS: BankData[] = [
       transfers: '5轉/5提',
       notes: '解任務最高至 3.15% (基本 1.65% ~ 最高 3.15%)'
     },
+    newCustomerTaskNotMet: {
+      rate: 1.65,
+      display: '1.650%',
+      quota: '10萬',
+      numericQuota: 100000,
+      transfers: '5轉/5提',
+      notes: '未達加碼任務時利率（牌告 0.65% + 新戶加碼 1%）'
+    },
     oldCustomer: {
       rate: 2.15,
       display: '2.150%',
@@ -272,6 +288,14 @@ export const BANKS: BankData[] = [
       transfers: '0~100次',
       notes: '牌告 0.9% + 數位開立 0.2% + 餘額滿 50萬 0.9%，一般最高 2%；優先理財貴賓再加 0.2%~0.5% 至 2.5%'
     },
+    newCustomerTaskNotMet: {
+      rate: 2.0,
+      display: '2.000%',
+      quota: '300萬',
+      numericQuota: 3000000,
+      transfers: '0~100次',
+      notes: '非優先理財貴賓時上限（牌告 0.9% + 數位開立 0.2% + 餘額滿 50萬 0.9%）'
+    },
     oldCustomer: {
       rate: 0.9,
       display: '0.900%',
@@ -292,10 +316,18 @@ export const BANKS: BankData[] = [
     newCustomer: {
       rate: 2.085,
       display: '2.085%',
+      quota: '30萬',
+      numericQuota: 300000,
+      transfers: '10~15次',
+      notes: '牌告 + 0.36%；開戶當月限額 20萬，解加碼條件次月起 30萬。跨轉提 15 次需小小兵 Debit 卡前月消費滿 5 千，否則 10 次'
+    },
+    newCustomerTaskNotMet: {
+      rate: 2.085,
+      display: '2.085%',
       quota: '20萬',
       numericQuota: 200000,
-      transfers: '10~15次',
-      notes: '牌告 + 0.36%；基本限額 20萬，解加碼條件次月起 30萬。跨轉提 15 次需小小兵 Debit 卡前月消費滿 5 千，否則 10 次'
+      transfers: '10次(共)',
+      notes: '未達加碼條件時基本限額（牌告 + 0.36%）'
     },
     oldCustomer: {
       rate: 2.085,

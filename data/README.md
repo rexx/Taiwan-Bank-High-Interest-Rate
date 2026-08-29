@@ -33,6 +33,7 @@ interface BankData {
   name: string;                          // 顯示名稱
   code: string;                          // 銀行代碼，「是否持有」以 code 為單位
   newCustomer: BankRateInfo;             // 未持有時套用
+  newCustomerTaskNotMet?: BankRateInfo;  // 未持有且未達任務時套用
   oldCustomer: BankRateInfo;             // 已持有時套用
   oldCustomerTaskNotMet?: BankRateInfo;  // 已持有但未達任務時套用
 }
@@ -87,11 +88,13 @@ interface BankData {
 
 **舊戶完全沒有優惠**（元大、凱基）：`rate: 0`、`display: '無優惠'`、`numericQuota: 0`。額度 0 讓配置演算法直接跳過這一列，畫面也會隱藏額度條。
 
-**舊戶要解任務才有高利率**（聯邦、臺企銀、陽信、彰銀）：`oldCustomer` 填達成後的利率，另外補一個 `oldCustomerTaskNotMet` 填未達成的利率。使用者可以在設定裡切換，畫面會把兩者一起顯示。
+**要解任務才有高利率**（聯邦、臺企銀、陽信、彰銀）：主欄位填達成後的值，再補一個對應的 `*TaskNotMet` 填未達成的值。使用者在設定或卡片上切換，畫面會把兩者一起顯示。
 
-**任務影響的是額度而不是利率**（上海）：同樣用 `oldCustomerTaskNotMet`，只是兩者差在 `numericQuota` 而非 `rate`。上海的基本限額是 20 萬，解加碼條件後次月起 30 萬。
+新舊戶各有各的 fallback，兩邊獨立：`newCustomer` 配 `newCustomerTaskNotMet`，`oldCustomer` 配 `oldCustomerTaskNotMet`。只填其中一邊也可以——沒填的那一邊就不顯示開關。判準是**那一邊的優惠是否真的綁任務**：例如彰銀新戶 2.5% 是無條件的固定優惠，就不該有 `newCustomerTaskNotMet`。
 
-新戶側沒有任務開關——`newCustomer` 一律套用，使用者不能切換。所以**新戶欄位填基本值（未解任務）**，把加碼條件寫進 `notes`，寧可低估也不要讓沒解任務的人被多配置。
+任務狀態本身是逐 `code` 記錄的單一狀態，不分新舊戶。切換成「已持有」或「考慮申辦」以外的狀態時會自動清掉。
+
+**任務影響的是額度而不是利率**（上海）：一樣用 `*TaskNotMet`，只是兩者差在 `numericQuota` 而非 `rate`。上海的基本限額是 20 萬，解加碼條件後次月起 30 萬——新舊戶都適用，所以兩組 fallback 都要填。
 
 **利率是牌告加碼**：`rate` 填算好的結果，`notes` 保留公式（`'牌告 + 0.36%'`），下次牌告變動時才知道要重算什麼。
 

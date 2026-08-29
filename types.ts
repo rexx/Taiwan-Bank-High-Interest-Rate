@@ -13,6 +13,7 @@ export interface BankData {
   name: string;
   code: string;
   newCustomer: BankRateInfo;
+  newCustomerTaskNotMet?: BankRateInfo;
   oldCustomer: BankRateInfo;
   oldCustomerTaskNotMet?: BankRateInfo;
 }
