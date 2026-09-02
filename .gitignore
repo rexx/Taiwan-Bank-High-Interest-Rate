@@ -22,3 +22,7 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Local reference material: the three AI Studio exports this repo grew out of.
+# Not part of the build.
+local-reference
