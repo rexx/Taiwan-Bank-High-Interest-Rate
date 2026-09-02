@@ -2,7 +2,7 @@
 
 台灣數位帳戶高利活存的比較表與資金配置建議工具。輸入手上的現金、勾選已持有與考慮申辦的銀行，就會依利率由高到低把錢填進各家的優惠額度，算出總利息。
 
-線上版：<https://rexx.github.io/Taiwan-Bank-High-Interest-Rate/>
+線上版：<https://rexx.github.io/taiwan-bank-high-interest-rate/>
 
 資料來源是 PTT Bank_Service 板的年度總整理文：<https://www.ptt.cc/bbs/Bank_Service/M.1767533701.A.974.html>
 
